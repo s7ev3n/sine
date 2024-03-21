@@ -1,0 +1,35 @@
+[project]
+name = "sine"
+version = "0.1.0"
+description = "Add your description here"
+authors = [
+    { name = "s7ev3n", email = "s.eleven.73@gmail.com" }
+]
+dependencies = [
+    "numpy>=1.26.4",
+    "openai>=1.14.2",
+    "torch @ https://download.pytorch.org/whl/cu121/torch-2.1.2%2Bcu121-cp310-cp310-linux_x86_64.whl",
+    "vllm>=0.3.3",
+    "sglang[all]>=0.1.13",
+    "flashinfer @ https://github.com/flashinfer-ai/flashinfer/releases/download/v0.0.3/flashinfer-0.0.3+cu121torch2.1-cp310-cp310-linux_x86_64.whl",
+    "setuptools>=69.2.0",
+    "outlines==0.0.34",
+    "pytest>=8.1.1",
+    "datasets>=2.18.0",
+]
+readme = "README.md"
+requires-python = ">= 3.10"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.rye]
+managed = true
+dev-dependencies = []
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/sine"]
