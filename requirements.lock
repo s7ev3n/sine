@@ -22,19 +22,38 @@ anthropic==0.21.1
 anyio==4.3.0
     # via anthropic
     # via httpx
+    # via jupyter-server
     # via openai
     # via starlette
     # via watchfiles
+argon2-cffi==23.1.0
+    # via jupyter-server
+argon2-cffi-bindings==21.2.0
+    # via argon2-cffi
+arrow==1.3.0
+    # via isoduration
+asttokens==2.4.1
+    # via stack-data
+async-lru==2.0.4
+    # via jupyterlab
 async-timeout==4.0.3
     # via aiohttp
 attrs==23.2.0
     # via aiohttp
     # via jsonschema
     # via referencing
+babel==2.14.0
+    # via jupyterlab-server
+beautifulsoup4==4.12.3
+    # via nbconvert
+bleach==6.1.0
+    # via nbconvert
 certifi==2024.2.2
     # via httpcore
     # via httpx
     # via requests
+cffi==1.16.0
+    # via argon2-cffi-bindings
 charset-normalizer==3.3.2
     # via requests
 click==8.1.7
@@ -43,10 +62,18 @@ click==8.1.7
 cloudpickle==3.0.0
     # via outlines
     # via sglang
+comm==0.2.2
+    # via ipykernel
 cupy-cuda12x==12.1.0
     # via vllm
 datasets==2.18.0
     # via sine
+debugpy==1.8.1
+    # via ipykernel
+decorator==5.1.1
+    # via ipython
+defusedxml==0.7.1
+    # via nbconvert
 dill==0.3.8
     # via datasets
     # via multiprocess
@@ -58,10 +85,15 @@ distro==1.9.0
     # via openai
 exceptiongroup==1.2.0
     # via anyio
+    # via ipython
     # via pytest
+executing==2.0.1
+    # via stack-data
 fastapi==0.110.0
     # via sglang
     # via vllm
+fastjsonschema==2.19.1
+    # via nbformat
 fastrlock==0.8.2
     # via cupy-cuda12x
 filelock==3.13.1
@@ -73,6 +105,8 @@ filelock==3.13.1
     # via triton
 flashinfer @ https://github.com/flashinfer-ai/flashinfer/releases/download/v0.0.3/flashinfer-0.0.3+cu121torch2.1-cp310-cp310-linux_x86_64.whl
     # via sine
+fqdn==1.5.1
+    # via jsonschema
 frozenlist==1.4.1
     # via aiohttp
     # via aiosignal
@@ -90,6 +124,7 @@ httptools==0.6.1
     # via uvicorn
 httpx==0.27.0
     # via anthropic
+    # via jupyterlab
     # via openai
 huggingface-hub==0.21.4
     # via datasets
@@ -98,6 +133,7 @@ huggingface-hub==0.21.4
 idna==3.6
     # via anyio
     # via httpx
+    # via jsonschema
     # via requests
     # via yarl
 iniconfig==2.0.0
@@ -105,16 +141,64 @@ iniconfig==2.0.0
 interegular==0.3.3
     # via outlines
     # via sglang
+ipykernel==6.29.3
+    # via jupyterlab
+ipython==8.22.2
+    # via ipykernel
+isoduration==20.11.0
+    # via jsonschema
+jedi==0.19.1
+    # via ipython
 jinja2==3.1.3
+    # via jupyter-server
+    # via jupyterlab
+    # via jupyterlab-server
+    # via nbconvert
     # via outlines
     # via torch
 joblib==1.3.2
     # via outlines
+json5==0.9.24
+    # via jupyterlab-server
+jsonpointer==2.4
+    # via jsonschema
 jsonschema==4.21.1
+    # via jupyter-events
+    # via jupyterlab-server
+    # via nbformat
     # via outlines
     # via ray
 jsonschema-specifications==2023.12.1
     # via jsonschema
+jupyter-client==8.6.1
+    # via ipykernel
+    # via jupyter-server
+    # via nbclient
+jupyter-core==5.7.2
+    # via ipykernel
+    # via jupyter-client
+    # via jupyter-server
+    # via jupyterlab
+    # via nbclient
+    # via nbconvert
+    # via nbformat
+jupyter-events==0.10.0
+    # via jupyter-server
+jupyter-lsp==2.2.4
+    # via jupyterlab
+jupyter-server==2.13.0
+    # via jupyter-lsp
+    # via jupyterlab
+    # via jupyterlab-server
+    # via notebook-shim
+jupyter-server-terminals==0.5.3
+    # via jupyter-server
+jupyterlab==4.1.5
+    # via sine
+jupyterlab-pygments==0.3.0
+    # via nbconvert
+jupyterlab-server==2.25.4
+    # via jupyterlab
 lark==1.1.9
     # via outlines
     # via sglang
@@ -122,6 +206,12 @@ llvmlite==0.42.0
     # via numba
 markupsafe==2.1.5
     # via jinja2
+    # via nbconvert
+matplotlib-inline==0.1.6
+    # via ipykernel
+    # via ipython
+mistune==3.0.2
+    # via nbconvert
 mpmath==1.3.0
     # via sympy
 msgpack==1.0.8
@@ -131,12 +221,23 @@ multidict==6.0.5
     # via yarl
 multiprocess==0.70.16
     # via datasets
+nbclient==0.10.0
+    # via nbconvert
+nbconvert==7.16.3
+    # via jupyter-server
+nbformat==5.10.3
+    # via jupyter-server
+    # via nbclient
+    # via nbconvert
 nest-asyncio==1.6.0
+    # via ipykernel
     # via outlines
 networkx==3.2.1
     # via torch
 ninja==1.11.1.1
     # via vllm
+notebook-shim==0.2.4
+    # via jupyterlab
 numba==0.59.1
     # via outlines
     # via sglang
@@ -160,31 +261,57 @@ outlines==0.0.34
     # via sglang
     # via sine
     # via vllm
+overrides==7.7.0
+    # via jupyter-server
 packaging==24.0
     # via datasets
     # via huggingface-hub
+    # via ipykernel
+    # via jupyter-server
+    # via jupyterlab
+    # via jupyterlab-server
+    # via nbconvert
     # via pytest
     # via ray
     # via transformers
 pandas==2.2.1
     # via datasets
+pandocfilters==1.5.1
+    # via nbconvert
+parso==0.8.3
+    # via jedi
+pexpect==4.9.0
+    # via ipython
 pillow==10.2.0
     # via sglang
+platformdirs==4.2.0
+    # via jupyter-core
 pluggy==1.4.0
     # via pytest
 plumbum==1.8.2
     # via rpyc
 prometheus-client==0.20.0
+    # via jupyter-server
     # via vllm
+prompt-toolkit==3.0.43
+    # via ipython
 protobuf==5.26.0
     # via ray
 psutil==5.9.8
+    # via ipykernel
     # via sglang
     # via vllm
+ptyprocess==0.7.0
+    # via pexpect
+    # via terminado
+pure-eval==0.2.2
+    # via stack-data
 pyarrow==15.0.2
     # via datasets
 pyarrow-hotfix==0.6
     # via datasets
+pycparser==2.21
+    # via cffi
 pydantic==2.6.4
     # via anthropic
     # via fastapi
@@ -194,29 +321,41 @@ pydantic==2.6.4
     # via vllm
 pydantic-core==2.16.3
     # via pydantic
+pygments==2.17.2
+    # via ipython
+    # via nbconvert
 pynvml==11.5.0
     # via vllm
 pytest==8.1.1
     # via sine
 python-dateutil==2.9.0.post0
+    # via arrow
+    # via jupyter-client
     # via pandas
 python-dotenv==1.0.1
     # via uvicorn
+python-json-logger==2.0.7
+    # via jupyter-events
 pytz==2024.1
     # via pandas
 pyyaml==6.0.1
     # via datasets
     # via huggingface-hub
+    # via jupyter-events
     # via ray
     # via transformers
     # via uvicorn
 pyzmq==25.1.2
+    # via ipykernel
+    # via jupyter-client
+    # via jupyter-server
     # via zmq
 ray==2.9.3
     # via vllm
 referencing==0.34.0
     # via jsonschema
     # via jsonschema-specifications
+    # via jupyter-events
     # via outlines
     # via sglang
 regex==2023.12.25
@@ -224,10 +363,17 @@ regex==2023.12.25
 requests==2.31.0
     # via datasets
     # via huggingface-hub
+    # via jupyterlab-server
     # via outlines
     # via ray
     # via sglang
     # via transformers
+rfc3339-validator==0.1.4
+    # via jsonschema
+    # via jupyter-events
+rfc3986-validator==0.1.1
+    # via jsonschema
+    # via jupyter-events
 rpds-py==0.18.0
     # via jsonschema
     # via referencing
@@ -237,26 +383,41 @@ safetensors==0.4.2
     # via transformers
 scipy==1.12.0
     # via outlines
+send2trash==1.8.2
+    # via jupyter-server
 sentencepiece==0.2.0
     # via vllm
-sglang==0.1.13
+sglang==0.1.14
     # via sglang
     # via sine
 six==1.16.0
+    # via asttokens
+    # via bleach
     # via python-dateutil
+    # via rfc3339-validator
 sniffio==1.3.1
     # via anthropic
     # via anyio
     # via httpx
     # via openai
+soupsieve==2.5
+    # via beautifulsoup4
+stack-data==0.6.3
+    # via ipython
 starlette==0.36.3
     # via fastapi
 sympy==1.12
     # via torch
+terminado==0.18.1
+    # via jupyter-server
+    # via jupyter-server-terminals
+tinycss2==1.2.1
+    # via nbconvert
 tokenizers==0.15.2
     # via anthropic
     # via transformers
 tomli==2.0.1
+    # via jupyterlab
     # via pytest
 torch @ https://download.pytorch.org/whl/cu121/torch-2.1.2%2Bcu121-cp310-cp310-linux_x86_64.whl
     # via outlines
@@ -264,20 +425,42 @@ torch @ https://download.pytorch.org/whl/cu121/torch-2.1.2%2Bcu121-cp310-cp310-l
     # via sine
     # via vllm
     # via xformers
+tornado==6.4
+    # via ipykernel
+    # via jupyter-client
+    # via jupyter-server
+    # via jupyterlab
+    # via terminado
 tqdm==4.66.2
     # via datasets
     # via huggingface-hub
     # via openai
     # via transformers
+traitlets==5.14.2
+    # via comm
+    # via ipykernel
+    # via ipython
+    # via jupyter-client
+    # via jupyter-core
+    # via jupyter-events
+    # via jupyter-server
+    # via jupyterlab
+    # via matplotlib-inline
+    # via nbclient
+    # via nbconvert
+    # via nbformat
 transformers==4.39.0
     # via outlines
     # via vllm
 triton==2.1.0
     # via torch
     # via vllm
+types-python-dateutil==2.9.0.20240316
+    # via arrow
 typing-extensions==4.10.0
     # via anthropic
     # via anyio
+    # via async-lru
     # via fastapi
     # via huggingface-hub
     # via openai
@@ -287,6 +470,8 @@ typing-extensions==4.10.0
     # via uvicorn
 tzdata==2024.1
     # via pandas
+uri-template==1.3.0
+    # via jsonschema
 urllib3==2.2.1
     # via requests
 uvicorn==0.29.0
@@ -300,6 +485,15 @@ vllm==0.3.3
     # via sine
 watchfiles==0.21.0
     # via uvicorn
+wcwidth==0.2.13
+    # via prompt-toolkit
+webcolors==1.13
+    # via jsonschema
+webencodings==0.5.1
+    # via bleach
+    # via tinycss2
+websocket-client==1.7.0
+    # via jupyter-server
 websockets==12.0
     # via uvicorn
 xformers==0.0.23.post1
