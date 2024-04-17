@@ -78,13 +78,3 @@ repos:
     rev: v1.8.0
     hooks:
       - id: mypy
-
-  # As per https://pylint.pycqa.org/en/stable/user_guide/installation/pre-commit-integration.html,
-  # pylint needs to import library modules and therefore run locally.
-  - repo: local
-    hooks:
-      - id: pylint
-        name: pylint
-        entry: poetry run pylint
-        language: system
-        types: [python]
