@@ -14,7 +14,7 @@ class Conversation:
         """Save the conversation history to the log file."""
         # TODO: log the conversation history
 
-    def run_conversation(
+    def start_conversation(
         self, perspectivist: Type[Perspectivist], expert: Type[Expert]
     ):
         # simulate multi-turn conversation between perspectivist and expert
@@ -26,7 +26,7 @@ class Conversation:
             self.chat_history.append(question_msg)
 
             # expert answer question
-            expert_answer, answer_msg = expert.chat(writer_question)
+            expert_answer, answer_msg = expert.chat(self.topic, writer_question)
             self.chat_history.append(answer_msg)
 
         return self.chat_history

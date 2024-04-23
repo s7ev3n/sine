@@ -54,16 +54,6 @@ class OutlineWriter:
 
         return outline
 
-
-class SectionWriter:
-    """Section writer writes the content of each section based on the outline
-    title and the related collected results."""
-
-    def __init__(self, writer_engine) -> None:
-        self.llm = writer_engine
-
-
-
 class ArticleWriter:
     '''ArticleWriter write section by section.'''
 
@@ -106,6 +96,3 @@ class ArticleWriter:
             article.append(section_content)
 
         return article
-
-    def polish(self, article):
-        """Polish the article by removing unwanted sections and references."""

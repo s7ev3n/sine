@@ -50,6 +50,7 @@ class PerspectiveGenerator:
 
         # extract content
         info = self.extract_title_and_toc(urls)
+        info = "\n".join(info)
 
         # generate perspectives
         perspectives = [DEFAULT_WRITER_PERSPECTIVE]
@@ -80,7 +81,11 @@ class Perspectivist:
 
     def __init__(self, perspectivist_engine, perspective):
         self.llm = perspectivist_engine
-        self.perspective = perspective
+        self._perspective = perspective
+
+    @property
+    def perspective(self):
+        return self._perspective
 
     def chat(self, topic, chat_history):
         if len(chat_history) == 0:
