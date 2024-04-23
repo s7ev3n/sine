@@ -62,6 +62,6 @@ Here is the format of your writing:
 2. Use [1], [2], ..., [n] in line (for example, "The capital of the United States is Washington, D.C.[1][3]."). You DO NOT need to include a References or Sources section to list the sources at the end.
 The collected information: {info}
 The topic of the page: {topic}
-The section you need to write: {section}
+The section you need to write: {section_title}
 Write the section with proper inline citations (Start your writing with # section title. Don't include the page tile or try to write other sections):\n
 """
