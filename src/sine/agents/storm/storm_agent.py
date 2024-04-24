@@ -1,6 +1,5 @@
 """STORM pipeline."""
-
-import logging
+import time
 from dataclasses import dataclass
 
 from sine.agents.storm.conversation import Conversation
@@ -24,6 +23,7 @@ class STORMConfig:
     saved_conversation_path: str = None
     saved_outline_path: str = None
     saved_article_path: str = None
+    saved_search_results_path: str = None
 
 
 class STORM:
@@ -60,30 +60,33 @@ class STORM:
         self.vector_search = SentenceTransformerSearch()
 
     def run_conversations(self):
-        import time
-
         # TODO: make conversations run in parallel threads to speed up
         perspectivists, expert = self._init_conversation_roles()
+
+        # expert retrieve knowledge (currently from google search)
+        retrievals = expert.collect_from_internet(self.cfg.topic)
+
         conversations = {}
         for perspectivist in perspectivists:
             conversation = Conversation(self.cfg.topic, self.cfg.max_conversation_turn)
             chat_history = conversation.start_conversation(perspectivist, expert)
             conversations[perspectivist.perspective] = chat_history
-            time.sleep(10)
-            logging.info(f"Conversation between perspective({perspectivist.perspective}) and expert:\n {chat_history}")
+            time.sleep(10) # hack to avoid api model rate limit
 
-        return conversations
+        return conversations, retrievals
 
 
-    def run_storm(self):
+    def run_storm_pipeline(self):
         # step 1: let us explore the topics from different perspectives and
         # gather the information through each perspective and expert (equiped
         # with search tools) conversation
         if self.cfg.saved_conversation_path:
             conversation_history = load_json(self.cfg.saved_conversation_path)
+            search_results = load_json(self.cfg.saved_search_results_path)
         else:
-            conversation_history = self.run_conversations()
+            conversation_history, search_results = self.run_conversations()
             save_json(self.cfg.saved_conversation_path, conversation_history)
+            save_json(self.cfg.saved_search_results_path, search_results)
 
         # step 2: let us generate the outline based on the conversation history
         if self.cfg.saved_outline_path:
@@ -93,13 +96,9 @@ class STORM:
             outline = self.outline_writer.write(self.cfg.topic, conversation_history)
 
         # step 3: let us write the article section by section
-        snippets = [[chat['content'] for chat in convsat] for convsat in conversation_history.values()]
-        self.vector_search.encoding(snippets)
+        self.vector_search.encoding(search_results)
         article = self.article_writer.write(self.cfg.topic, outline, self.vector_search)
-        with open('article.md', 'w') as f:
-            f.write(outline)
 
         # step 4: post process the article
-
 
         return article

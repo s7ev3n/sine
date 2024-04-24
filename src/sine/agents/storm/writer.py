@@ -70,7 +70,6 @@ class ArticleWriter:
     def _format_snippet(self, snippets):
         info = ''
         for n, r in enumerate(snippets):
-            r = limit_word_count_preserve_newline(r[0], 700)
             info += f'[{n + 1}] ' + '\n'.join([r])
             info += '\n\n'
         return info
@@ -80,7 +79,7 @@ class ArticleWriter:
             title and the related collected results."""
 
         # search for section related snippets from vector_db
-        selected_snippets = vector_db.search([section_title], top_k=5)
+        selected_snippets = vector_db.search([section_title], top_k=10)
         info = self._format_snippet(selected_snippets)
 
         message = [

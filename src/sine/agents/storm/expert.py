@@ -29,22 +29,17 @@ class Expert:
             ),
         )
 
-    def _gen_topic_related_queries(self, topic):
-        message = [dict(role="user", content=GEN_SEARCH_QUERY.format(topic=topic))]
-
-        response = self.llm.chat(message)
-        matches = re.findall(r'- "(.*)"', response)
-        queries = [match.strip() for match in matches]
-
-        return queries
-
     def _search(self, query, top_k: int = 5):
         """Generate related questions and google search for the internet."""
         return self.search_engine.run(query, top_k)
 
     def collect_from_internet(self, topic, top_k: int = 5):
         """Search the internet for the topic, and return internet results."""
-        queries = self._gen_topic_related_queries(topic)
+        # expand the search queries from the topic
+        message = [dict(role="user", content=GEN_SEARCH_QUERY.format(topic=topic))]
+        response = self.llm.chat(message)
+        matches = re.findall(r'- "(.*)"', response)
+        queries = [match.strip() for match in matches]
 
         for query in queries:
             tool_return = self._search(query, top_k)
@@ -61,7 +56,7 @@ class Expert:
             self.default_message = self._default_prompt(topic, self.collected_results)
 
         messages = [self.default_message]
-        messages.append(dict(role="user", content="Qusetion: " + question_str))
+        messages.append(dict(role="assistant", content="Qusetion: " + question_str))
 
         response = self.llm.chat(messages)
         response_msg = dict(role="assistant", content=response)
