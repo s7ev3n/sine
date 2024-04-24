@@ -67,23 +67,21 @@ class ArticleWriter:
     def __init__(self, writer_engine) -> None:
         self.llm = writer_engine
 
-    def _format_conversation(self, conversation_history):
-        # format chat history to conversation string
-        conversation_str = "\n"
+    def _format_snippet(self, snippets):
+        info = ''
+        for n, r in enumerate(snippets):
+            r = limit_word_count_preserve_newline(r[0], 700)
+            info += f'[{n + 1}] ' + '\n'.join([r])
+            info += '\n\n'
+        return info
 
-        for conversations in conversation_history.values():
-            for turn in conversations:
-                conversation_str += f"{turn['content']}\n"
-
-        return conversation_str
-
-    def write_section(self, topic, section_title, info):
+    def write_section(self, topic, section_title, vector_db):
         """Section writer writes the content of each section based on the outline
             title and the related collected results."""
-        if isinstance(info, dict):
-            info = self._format_conversation(info)
 
-        info = limit_word_count_preserve_newline(info, 3500)
+        # search for section related snippets from vector_db
+        selected_snippets = vector_db.search([section_title], top_k=5)
+        info = self._format_snippet(selected_snippets)
 
         message = [
             dict(role='user',
@@ -97,14 +95,14 @@ class ArticleWriter:
 
         return response
 
-    def write(self, topic, outline, info):
+    def write(self, topic, outline, vector_db):
         """ Write the article section by section.
 
         Args:
             topic (str): topic of interest
             outline (str): outline of the article, with markdown hash tags,
                             e.g. #, ## indicating section and subsections etc
-            context_content (str): one string about the related content collected from internet
+            vector_db (str): search section related info from vector_db
 
         TODO: use concurrent.futures.ThreadPoolExecutor to make it parallel,
         but mind the rate limit of the API.
@@ -115,7 +113,7 @@ class ArticleWriter:
         article = []
         for section in outline_tree:
             print(f'Writing {section} ...')
-            section_content = self.write_section(topic, section, info)
+            section_content = self.write_section(topic, section, vector_db)
             article.append(section_content)
 
         return article

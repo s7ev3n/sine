@@ -9,6 +9,7 @@ from sine.agents.storm.perspectivist import PerspectiveGenerator, Perspectivist
 from sine.agents.storm.utils import load_json, save_json
 from sine.agents.storm.writer import ArticleWriter, OutlineWriter
 from sine.models.api_model import APIModel
+from sine.models.sentence_transformer import SentenceTransformerSearch
 
 
 @dataclass
@@ -33,6 +34,7 @@ class STORM:
         self._init_llms()
         self._init_topic_explorer()
         self._init_writers()
+        self._init_vector_search()
 
     def _init_topic_explorer(self):
         self.topic_explorer = PerspectiveGenerator(self.conversation_llm, self.cfg.topic)
@@ -53,6 +55,9 @@ class STORM:
     def _init_writers(self):
         self.outline_writer = OutlineWriter(self.outline_llm)
         self.article_writer = ArticleWriter(self.article_llm)
+
+    def _init_vector_search(self):
+        self.vector_search = SentenceTransformerSearch()
 
     def run_conversations(self):
         import time
@@ -88,10 +93,13 @@ class STORM:
             outline = self.outline_writer.write(self.cfg.topic, conversation_history)
 
         # step 3: let us write the article section by section
-        article = self.article_writer.write(self.cfg.topic, outline, conversation_history)
+        snippets = [[chat['content'] for chat in convsat] for convsat in conversation_history.values()]
+        self.vector_search.encoding(snippets)
+        article = self.article_writer.write(self.cfg.topic, outline, self.vector_search)
         with open('article.md', 'w') as f:
             f.write(outline)
+
         # step 4: post process the article
-        # TODO: post process citations and polish
+
 
         return article
