@@ -1,6 +1,8 @@
 from sine.agents.storm.prompts import (REFINE_OUTLINE, WRITE_DRAFT_OUTLINE,
                                        WRITE_SECTION)
-from sine.agents.storm.utils import clean_up_outline, process_table_of_contents
+from sine.agents.storm.utils import (clean_up_outline,
+                                     limit_word_count_preserve_newline,
+                                     process_table_of_contents)
 
 
 class OutlineWriter:
@@ -12,29 +14,32 @@ class OutlineWriter:
 
     def write_draft_outline(self, topic):
         message = [
-            dict(role="user", content=WRITE_DRAFT_OUTLINE.format(topic)),
+            dict(role="user", content=WRITE_DRAFT_OUTLINE.format(topic=topic)),
         ]
 
         response = self.llm.chat(message)
 
         return clean_up_outline(response)
 
-    def _format_conversation(self, chat_history):
+    def _format_conversation(self, conversation_history):
         # format chat history to conversation string
-        conversation = "\n"
-        # TODO: format chat history to conversation string
-        # for i in range(0, len(chat_history), 2):
-        #     conversation += f'Wikipedia Writer: {chat_history[i]['content']}\n'
-        #     conversation += f'Expert: {chat_history[i+1]['content']}\n'
+        conversation_str = "\n"
 
-        return conversation
+        for conversations in conversation_history.values():
+            for turn in conversations:
+                if turn["role"] == "user":
+                    conversation_str += f"Wikipedia writer: {turn['content']}\n"
+                else:
+                    conversation_str += f"Expert: {turn['content']}\n"
+
+        return conversation_str
 
     def refine_outline(self, topic, draft_outline, conversation):
         message = [
             dict(
-                role="system",
+                role="user",
                 content=REFINE_OUTLINE.format(
-                    topic=topic, conversation=conversation, dfraft_outline=draft_outline
+                    topic=topic, conversation=conversation, draft_outline=draft_outline
                 ),
             ),
         ]
@@ -47,6 +52,8 @@ class OutlineWriter:
 
         # format conversation
         conversation = self._format_conversation(chat_history)
+        # limit the conversation tokens as the api model has upper limit token per minute
+        conversation = limit_word_count_preserve_newline(conversation, max_word_count=3500)
 
         # improve outline
         outline = self.refine_outline(topic, draft_outline, conversation)
@@ -60,13 +67,28 @@ class ArticleWriter:
     def __init__(self, writer_engine) -> None:
         self.llm = writer_engine
 
-    def write_section(self, topic, section_title, context_content):
+    def _format_conversation(self, conversation_history):
+        # format chat history to conversation string
+        conversation_str = "\n"
+
+        for conversations in conversation_history.values():
+            for turn in conversations:
+                conversation_str += f"{turn['content']}\n"
+
+        return conversation_str
+
+    def write_section(self, topic, section_title, info):
         """Section writer writes the content of each section based on the outline
             title and the related collected results."""
+        if isinstance(info, dict):
+            info = self._format_conversation(info)
+
+        info = limit_word_count_preserve_newline(info, 3500)
+
         message = [
             dict(role='user',
                  content=WRITE_SECTION.format(
-                     info=context_content,
+                     info=info,
                      topic=topic,
                      section_title=section_title)),
         ]
@@ -75,7 +97,7 @@ class ArticleWriter:
 
         return response
 
-    def write(self, topic, outline, conext_content):
+    def write(self, topic, outline, info):
         """ Write the article section by section.
 
         Args:
@@ -92,7 +114,8 @@ class ArticleWriter:
 
         article = []
         for section in outline_tree:
-            section_content = self.write_section(topic, section, conext_content)
+            print(f'Writing {section} ...')
+            section_content = self.write_section(topic, section, info)
             article.append(section_content)
 
         return article

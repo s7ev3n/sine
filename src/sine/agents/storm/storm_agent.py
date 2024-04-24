@@ -1,10 +1,12 @@
 """STORM pipeline."""
 
+import logging
 from dataclasses import dataclass
 
 from sine.agents.storm.conversation import Conversation
 from sine.agents.storm.expert import Expert
 from sine.agents.storm.perspectivist import PerspectiveGenerator, Perspectivist
+from sine.agents.storm.utils import load_json, save_json
 from sine.agents.storm.writer import ArticleWriter, OutlineWriter
 from sine.models.api_model import APIModel
 
@@ -18,6 +20,9 @@ class STORMConfig:
     question_asker_llm: str = "llama3-8b-8192"
     outline_llm: str = "llama3-70b-8192"
     article_llm: str = "llama3-70b-8192"
+    saved_conversation_path: str = None
+    saved_outline_path: str = None
+    saved_article_path: str = None
 
 
 class STORM:
@@ -27,6 +32,7 @@ class STORM:
     def init(self):
         self._init_llms()
         self._init_topic_explorer()
+        self._init_writers()
 
     def _init_topic_explorer(self):
         self.topic_explorer = PerspectiveGenerator(self.conversation_llm, self.cfg.topic)
@@ -49,27 +55,42 @@ class STORM:
         self.article_writer = ArticleWriter(self.article_llm)
 
     def run_conversations(self):
+        import time
+
         # TODO: make conversations run in parallel threads to speed up
         perspectivists, expert = self._init_conversation_roles()
         conversations = {}
         for perspectivist in perspectivists:
             conversation = Conversation(self.cfg.topic, self.cfg.max_conversation_turn)
             chat_history = conversation.start_conversation(perspectivist, expert)
-
             conversations[perspectivist.perspective] = chat_history
+            time.sleep(10)
+            logging.info(f"Conversation between perspective({perspectivist.perspective}) and expert:\n {chat_history}")
+
+        return conversations
+
 
     def run_storm(self):
         # step 1: let us explore the topics from different perspectives and
         # gather the information through each perspective and expert (equiped
         # with search tools) conversation
-        conversation_history = self.run_conversations()
+        if self.cfg.saved_conversation_path:
+            conversation_history = load_json(self.cfg.saved_conversation_path)
+        else:
+            conversation_history = self.run_conversations()
+            save_json(self.cfg.saved_conversation_path, conversation_history)
 
         # step 2: let us generate the outline based on the conversation history
-        outline = self.outline_writer.write(self.cfg.topic, conversation_history)
+        if self.cfg.saved_outline_path:
+            with open(self.cfg.saved_outline_path) as f:
+                outline = f.read()
+        else:
+            outline = self.outline_writer.write(self.cfg.topic, conversation_history)
 
         # step 3: let us write the article section by section
         article = self.article_writer.write(self.cfg.topic, outline, conversation_history)
-
+        with open('article.md', 'w') as f:
+            f.write(outline)
         # step 4: post process the article
         # TODO: post process citations and polish
 

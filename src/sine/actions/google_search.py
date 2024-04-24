@@ -76,7 +76,7 @@ class GoogleSearch(BaseAction):
             tool_return.state = ActionStatusCode.HTTP_ERROR
         elif status_code == 200:
             parsed_res = self.parse_results(response)
-            tool_return.result = [dict(type="text", content=str(parsed_res))]
+            tool_return.result = parsed_res
             tool_return.state = ActionStatusCode.SUCCESS
         else:
             tool_return.errmsg = str(status_code)
@@ -105,26 +105,24 @@ class GoogleSearch(BaseAction):
             elif answer_box.get("snippetHighlighted"):
                 return answer_box.get("snippetHighlighted")
 
-        if results.get("knowledgeGraph"):
-            kg = results.get("knowledgeGraph", {})
-            title = kg.get("title")
-            entity_type = kg.get("type")
-            if entity_type:
-                snippets.append(f"{title}: {entity_type}.")
-            description = kg.get("description")
-            if description:
-                snippets.append(description)
-            for attribute, value in kg.get("attributes", {}).items():
-                snippets.append(f"{title} {attribute}: {value}.")
+        # if results.get("knowledgeGraph"):
+        #     kg = results.get("knowledgeGraph", {})
+        #     title = kg.get("title")
+        #     entity_type = kg.get("type")
+        #     if entity_type:
+        #         snippets.append(f"{title}: {entity_type}.")
+        #     description = kg.get("description")
+        #     if description:
+        #         snippets.append(description)
+        #     for attribute, value in kg.get("attributes", {}).items():
+        #         snippets.append(f"{title} {attribute}: {value}.")
 
-        for result in results[self.result_key_for_type[self.search_type]][: self.k]:
+        for result in results[self.result_key_for_type[self.search_type]]:
             if "snippet" in result:
                 snippets.append(result["snippet"])
-            for attribute, value in result.get("attributes", {}).items():
-                snippets.append(f"{attribute}: {value}.")
+            # for attribute, value in result.get("attributes", {}).items():
+            #     snippets.append(f"{attribute}: {value}.")
 
-        if len(snippets) == 0:
-            return ["No good Google Search Result was found"]
         return snippets
 
     def search(

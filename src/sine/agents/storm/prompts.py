@@ -23,10 +23,10 @@ Your persona besides being a Wikipedia writer: {persona}
 
 GEN_SEARCH_QUERY = """You want to answer the question using Google search. What do you type in the search box?
 Write the queries you will use in the following format:
-- query 1
-- query 2
+- "query 1"
+- "query 2"
 ...
-- query n
+- "query n"
 
 Topic you are discussing about: {topic}
 """
@@ -51,7 +51,7 @@ Here is the format of your writing:
 1. Use "#" Title" to indicate section title, "##" Title" to indicate subsection title, "###" Title" to indicate subsubsection title, and so on.
 2. Do not include other information.
 The topic you want to write: {topic}
-Conversation history:\n {converation}
+Conversation history:\n {conversation}
 Draft outline:\n {draft_outline}
 Write the Wikipedia page outline (Use "#" Title" to indicate section title, "##" Title" to indication subsection title, ...):\n
 """

@@ -1,8 +1,21 @@
+import json
 import re
 
 import requests
 from bs4 import BeautifulSoup
 
+
+def load_json(file_path):
+    with open(file_path) as f:
+        data = json.load(f)
+
+    return data
+
+def save_json(file_path, data):
+    with open(file_path, 'w') as f:
+        json.dump(data, f)
+
+    return True
 
 def get_wiki_page_title_and_toc(url):
     """Get the main title and table of contents from an url of a Wikipedia page."""
@@ -119,3 +132,36 @@ def process_table_of_contents(toc):
             path.append((current_dict[heading], level))
 
     return root
+
+def limit_word_count_preserve_newline(input_string, max_word_count):
+        """
+        Limit the word count of an input string to a specified maximum, while preserving the integrity of complete lines.
+
+        The function truncates the input string at the nearest word that does not exceed the maximum word count,
+        ensuring that no partial lines are included in the output. Words are defined as text separated by spaces,
+        and lines are defined as text separated by newline characters.
+
+        Args:
+            input_string (str): The string to be truncated. This string may contain multiple lines.
+            max_word_count (int): The maximum number of words allowed in the truncated string.
+
+        Returns:
+            str: The truncated string with word count limited to `max_word_count`, preserving complete lines.
+        """
+
+        word_count = 0
+        limited_string = ''
+
+        for word in input_string.split('\n'):
+            line_words = word.split()
+            for lw in line_words:
+                if word_count < max_word_count:
+                    limited_string += lw + ' '
+                    word_count += 1
+                else:
+                    break
+            if word_count >= max_word_count:
+                break
+            limited_string = limited_string.strip() + '\n'
+
+        return limited_string.strip()
