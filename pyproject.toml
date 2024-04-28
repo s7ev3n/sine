@@ -16,6 +16,7 @@ dependencies = [
     "zhipuai>=2.0.1",
     "requests>=2.31.0",
     "bs4>=0.0.2",
+    "streamlit>=1.33.0",
 ]
 readme = "README.md"
 requires-python = ">= 3.10"

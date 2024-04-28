@@ -3,6 +3,7 @@ from sine.agents.storm.prompts import (REFINE_OUTLINE, WRITE_DRAFT_OUTLINE,
 from sine.agents.storm.utils import (clean_up_outline,
                                      limit_word_count_preserve_newline,
                                      process_table_of_contents)
+from sine.common.logger import logger
 
 
 class OutlineWriter:

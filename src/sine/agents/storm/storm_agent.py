@@ -7,6 +7,7 @@ from sine.agents.storm.expert import Expert
 from sine.agents.storm.perspectivist import PerspectiveGenerator, Perspectivist
 from sine.agents.storm.utils import load_json, save_json
 from sine.agents.storm.writer import ArticleWriter, OutlineWriter
+from sine.common.logger import logger
 from sine.models.api_model import APIModel
 from sine.models.sentence_transformer import SentenceTransformerSearch
 
@@ -30,6 +31,14 @@ class STORM:
     def __init__(self, cfg: STORMConfig) -> None:
         self.cfg = cfg
 
+        log_str = f"STORM config:\ntopic: {self.cfg.topic}\nmax_perspectivist: {self.cfg.max_perspectivist}" + \
+                f"\nmax_conversation_turn: {self.cfg.max_conversation_turn}" + \
+                f"\nconversation_llm:{self.cfg.conversation_llm}" + \
+                f"\nquestion_asker_llm: {self.cfg.question_asker_llm}" + \
+                f"\noutline_llm: {self.cfg.outline_llm}" + \
+                f"\narticle_llm: {self.cfg.article_llm}"
+        logger.info(log_str)
+
     def init(self):
         self._init_llms()
         self._init_topic_explorer()
@@ -44,17 +53,20 @@ class STORM:
         self.question_asker_llm = APIModel(self.cfg.question_asker_llm)
         self.outline_llm = APIModel(self.cfg.outline_llm)
         self.article_llm = APIModel(self.cfg.article_llm)
+        logger.info('initialized llms')
 
     def _init_conversation_roles(self):
         perspectives = self.topic_explorer.generate(max_perspective=self.cfg.max_perspectivist)
         perspectivists = [Perspectivist(self.conversation_llm, perspective) for perspective in perspectives]
         expert = Expert(self.conversation_llm)
+        logger.info(f'initialized {len(perspectivists)} editor agents and expert agent')
 
         return perspectivists, expert
 
     def _init_writers(self):
         self.outline_writer = OutlineWriter(self.outline_llm)
         self.article_writer = ArticleWriter(self.article_llm)
+        logger.info('initialized writers')
 
     def _init_vector_search(self):
         self.vector_search = SentenceTransformerSearch()

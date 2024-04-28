@@ -1,8 +1,8 @@
-import logging
 import re
 
 from sine.actions.google_search import GoogleSearch
 from sine.agents.storm.prompts import ANSWER_QUESTION, GEN_SEARCH_QUERY
+from sine.common.logger import logger
 from sine.common.schema import ActionStatusCode
 
 
@@ -23,33 +23,44 @@ class Expert:
             collected_results_str += result
 
         return dict(
-            role="system",
+            role="user",
             content=ANSWER_QUESTION.format(
                 topic=topic, info=collected_results_str
             ),
         )
 
-    def _search(self, query, top_k: int = 5):
-        """Generate related questions and google search for the internet."""
-        return self.search_engine.run(query, top_k)
+    def search_queries(self, queries, top_k: int = 5):
+        """google search for the internet."""
+
+        for query in queries:
+            try:
+                tool_return = self.search_engine.run(query, top_k)
+                self.collected_results.extend(tool_return.result)
+            except BaseException:
+                logger.warning(f"Failed to search [{query}] from the internet.")
+                continue
+
+        return self.collected_results
 
     def collect_from_internet(self, topic, top_k: int = 5):
         """Search the internet for the topic, and return internet results."""
         # expand the search queries from the topic
         message = [dict(role="user", content=GEN_SEARCH_QUERY.format(topic=topic))]
-        response = self.llm.chat(message)
+        try:
+            logger.info(f"Expert generated search queries based on {topic}:\n{response}")
+            response = self.llm.chat(message)
+        except BaseException:
+            logger.warning("Failed to generate search queries.")
+
         matches = re.findall(r'- "(.*)"', response)
         queries = [match.strip() for match in matches]
-
-        for query in queries:
-            tool_return = self._search(query, top_k)
-            self.collected_results.extend(tool_return.result)
+        results = self.search_queries(queries)
 
         return self.collected_results
 
     def chat(self, topic, question_str):
         if not len(self.collected_results):
-            logging.info("Collecting from internet using search engine...")
+            logger.info("Expert collecting from internet using search engine...")
             self.collect_from_internet(topic=topic)
 
         if self.default_message is None:
@@ -57,8 +68,13 @@ class Expert:
 
         messages = [self.default_message]
         messages.append(dict(role="assistant", content="Qusetion: " + question_str))
+        try:
+            response = self.llm.chat(messages)
+            logger.info(f"Expert answer: {response}")
+        except BaseException:
+            logger.warning("Expert failed to chat.")
 
-        response = self.llm.chat(messages)
+
         response_msg = dict(role="assistant", content=response)
 
         return response, response_msg

@@ -2,6 +2,7 @@ from typing import Type
 
 from sine.agents.storm.expert import Expert
 from sine.agents.storm.perspectivist import Perspectivist
+from sine.common.logger import logger
 
 
 class Conversation:
@@ -18,7 +19,8 @@ class Conversation:
         self, perspectivist: Type[Perspectivist], expert: Type[Expert]
     ):
         # simulate multi-turn conversation between perspectivist and expert
-        for _ in range(self.max_turn):
+        for i in range(self.max_turn):
+            logger.info(f"Start the {i} conversation between perspectivist and expert.")
             # perspectivist ask question
             writer_question, question_msg = perspectivist.chat(
                 self.topic, self.chat_history
