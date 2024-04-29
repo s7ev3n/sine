@@ -16,31 +16,41 @@ st.set_page_config(
 
 class DisplayLogs:
     def __init__(self):
-        self.displayed_logs = None
+        self.displayed_logs = ''
         self.running = True
         self.log_file = self.open_log()
 
     def open_log(self):
         try:
-            self.log_file = open(LOG_FILE_PATH)
+            log_file = open(LOG_FILE_PATH)
         except FileNotFoundError:
             print("Log file not found.")
+            return None
 
-        return self.log_file
+        return log_file
+
+    def latest_log(self):
+        latest_log = self.displayed_logs
+        self.displayed_logs = ''
+        return latest_log
 
     def close_log(self):
         self.running = False
-        self.log_file.close()
+        if self.log_file:
+            self.log_file.close()
 
     def update_log(self):
-        tmp_log = self.log_file.read()
-        if self.displayed_logs != tmp_log:
-            self.displayed_logs = tmp_log
+        new_log = self.log_file.read()
+        if new_log:
+            self.displayed_logs += new_log
 
     def run(self):
-        while self.running:
-            self.update_log()
-            time.sleep(0.1)
+        try:
+            while self.running:
+                self.update_log()
+                time.sleep(0.1)
+        finally:
+            self.close_log()
 
 
 def main():
