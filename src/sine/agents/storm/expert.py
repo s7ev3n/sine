@@ -47,10 +47,11 @@ class Expert:
         # expand the search queries from the topic
         message = [dict(role="user", content=GEN_SEARCH_QUERY.format(topic=topic))]
         try:
-            logger.info(f"Expert generated search queries based on {topic}:\n{response}")
             response = self.llm.chat(message)
+            logger.info(f"Expert generated search queries based on {topic}:\n{response}")
         except BaseException:
             logger.warning("Failed to generate search queries.")
+            response = ""
 
         matches = re.findall(r'- "(.*)"', response)
         queries = [match.strip() for match in matches]
