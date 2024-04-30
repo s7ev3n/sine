@@ -3,10 +3,11 @@ import time
 
 import streamlit as st
 import streamlit_shadcn_ui as ui
-from streamlit.runtime.scriptrunner import (add_script_run_ctx,
-                                            get_script_run_ctx)
+from streamlit.runtime.scriptrunner import add_script_run_ctx
+from streamlit.runtime.scriptrunner.script_run_context import \
+    get_script_run_ctx
 
-from sine.agents.storm.storm_agent import STORM, STORMConfig
+from sine.agents.storm.storm_agent import STORM, STORMConfig, STORMStatus
 from sine.common.logger import LOG_FILE_PATH, logger
 
 st.set_page_config(
@@ -29,29 +30,33 @@ class DisplayLogs:
 
         return log_file
 
-    def latest_log(self):
-        latest_log = self.displayed_logs
-        self.displayed_logs = ''
-        return latest_log
+    def update_log(self):
+        try:
+            new_log = self.log_file.read()
+            if new_log:
+                self.displayed_logs += new_log
+        except Exception as e:
+            print(f"Error reading log file: {e}")
+            return None
 
     def close_log(self):
         self.running = False
         if self.log_file:
             self.log_file.close()
 
-    def update_log(self):
-        new_log = self.log_file.read()
-        if new_log:
-            self.displayed_logs += new_log
-
     def run(self):
-        try:
-            while self.running:
-                self.update_log()
-                time.sleep(0.1)
-        finally:
-            self.close_log()
+        while self.running:
+            self.update_log()
+            time.sleep(0.1)
 
+def log_ui(disp_log, storm_agent):
+    with st.expander("LOGGING"):
+        placeholder = st.empty()
+        while storm_agent.state == STORMStatus.RUNNING:
+            log = disp_log.displayed_logs
+            if log != '':
+                placeholder.code(log)
+            time.sleep(0.1)
 
 def main():
     st.markdown("""
@@ -71,7 +76,6 @@ def main():
 
     if clicked:
         topic_input_value = st.session_state["topic_input"]
-        st.write('topic_input_value', topic_input_value)
         if topic_input_value is None:
             st.error("Please enter a topic of interest")
         topic_of_interest = topic_input_value
@@ -90,14 +94,13 @@ def main():
         # init log thread
         disp_log = DisplayLogs()
         log_thread = threading.Thread(target=disp_log.run)
+        ctx = get_script_run_ctx()
+        add_script_run_ctx(log_thread, ctx)
 
         storm_thread.start()
         log_thread.start()
 
-        with st.expander("INFO"):
-            if disp_log.displayed_logs is not None:
-                st.write(disp_log.displayed_logs)
-
+        log_ui(disp_log, storm_agent)
 
 
     # display_featured_article()

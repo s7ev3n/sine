@@ -1,6 +1,7 @@
 """STORM pipeline."""
 import time
 from dataclasses import dataclass
+from enum import Enum, unique
 
 from sine.agents.storm.conversation import Conversation
 from sine.agents.storm.expert import Expert
@@ -11,6 +12,12 @@ from sine.common.logger import logger
 from sine.models.api_model import APIModel
 from sine.models.sentence_transformer import SentenceTransformerSearch
 
+
+@unique
+class STORMStatus(str, Enum):
+    STANDBY = 'standby'
+    RUNNING = 'running'
+    STOP = 'stop'
 
 @dataclass
 class STORMConfig:
@@ -30,7 +37,8 @@ class STORMConfig:
 class STORM:
     def __init__(self, cfg: STORMConfig) -> None:
         self.cfg = cfg
-
+        self.state = STORMStatus.STANDBY
+        self.final_article = None
         log_str = f"STORM config:\ntopic: {self.cfg.topic}\nmax_perspectivist: {self.cfg.max_perspectivist}" + \
                 f"\nmax_conversation_turn: {self.cfg.max_conversation_turn}" + \
                 f"\nconversation_llm:{self.cfg.conversation_llm}" + \
@@ -44,6 +52,7 @@ class STORM:
         self._init_topic_explorer()
         self._init_writers()
         self._init_vector_search()
+        self.state = STORMStatus.RUNNING
 
     def _init_topic_explorer(self):
         self.topic_explorer = PerspectiveGenerator(self.conversation_llm, self.cfg.topic)
@@ -112,5 +121,8 @@ class STORM:
         article = self.article_writer.write(self.cfg.topic, outline, self.vector_search)
 
         # step 4: post process the article
+
+        self.final_article = article
+        self.state = STORMStatus.STOP
 
         return article
