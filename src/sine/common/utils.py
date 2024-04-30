@@ -1,4 +1,5 @@
 import os
+import re
 from dataclasses import asdict
 from enum import IntEnum
 
@@ -15,3 +16,11 @@ def dataclass2dict(data):
 def make_dir_if_not_exist(dir_path):
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
+
+def is_valid_url(url):
+    pattern = re.compile(r'^(http|https)://[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+
+    if pattern.match(url):
+        return True
+    else:
+        return False
