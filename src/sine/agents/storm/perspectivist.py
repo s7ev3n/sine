@@ -1,14 +1,13 @@
 """Perspectivist explore given topic."""
 
-import logging
 import re
-from typing import List
 
 from sine.agents.storm.prompts import (ASK_QUESTION,
                                        DEFAULT_WRITER_PERSPECTIVE,
                                        FIND_RELATED_TOPIC,
                                        GENERATE_WRITERS_PERSPECTIVE)
 from sine.agents.storm.utils import get_wiki_page_title_and_toc
+from sine.common.logger import logger
 
 
 class PerspectiveGenerator:
@@ -24,9 +23,14 @@ class PerspectiveGenerator:
         message = [
             dict(role="user", content=FIND_RELATED_TOPIC.format(topic=self.topic)),
         ]
+        try:
+            related_topics = self.llm.chat(message)
+            urls = [s[s.find("http") :] for s in related_topics.split("\n")][:-2]
+        except BaseException:
+            logger.error("Failed to find related topics.")
+            exit()
 
-        related_topics = self.llm.chat(message)
-        urls = [s[s.find("http") :] for s in related_topics.split("\n")][:-2]
+        logger.info(f"Find related topics urls: {urls}")
 
         return related_topics, urls
 
@@ -37,7 +41,7 @@ class PerspectiveGenerator:
                 title, toc = get_wiki_page_title_and_toc(url)
                 examples.append(f"Title: {title}\nTable of Contents: {toc}")
             except Exception as e:
-                logging.error(f"Error occurs when processing {url}: {e}")
+                logger.warning(f"Error occurs when processing {url}: {e}")
                 continue
 
         return examples
@@ -56,6 +60,8 @@ class PerspectiveGenerator:
         perspectives = [DEFAULT_WRITER_PERSPECTIVE]
         perspectives.extend(self._generate_perspectives(info)[:max_perspective])
 
+        logger.info(f"Generated {len(perspectives)} perspectives: {perspectives}")
+
         return perspectives
 
     def _generate_perspectives(self, info):
@@ -63,7 +69,11 @@ class PerspectiveGenerator:
             dict(role="user", content=GENERATE_WRITERS_PERSPECTIVE.format(info=info)),
         ]
 
-        response = self.llm.chat(message)
+        try:
+            response = self.llm.chat(message)
+        except BaseException:
+            logger.warning("Failed to generate perspectives.")
+            return []
 
         # process responses to obtain perspectives
         perspectives = []
@@ -95,11 +105,13 @@ class Perspectivist:
                     content=ASK_QUESTION.format(topic=topic, persona=self.perspective),
                 )
             )
+        try:
+            response = self.llm.chat(chat_history)
+            logger.info(f"Perspectivist ({self._perspective}) ask: {response}")
+        except BaseException:
+            logger.warning("Perspectivist failed.")
+            response = ""
 
-        response = self._chat(chat_history)
         response_msg = dict(role="assistant", content=response)
 
         return response, response_msg
-
-    def _chat(self, messages: List[dict]):
-        return self.llm.chat(messages)
