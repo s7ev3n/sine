@@ -8,14 +8,13 @@ from sine.agents.storm.prompts import (ASK_QUESTION,
                                        GENERATE_WRITERS_PERSPECTIVE)
 from sine.agents.storm.utils import get_wiki_page_title_and_toc
 from sine.common.logger import logger
-
+from sine.common.utils import is_valid_url
 
 class PerspectiveGenerator:
     """PerspectiveGen generates perspectives for the given topic, each
     perspective foucses on important aspects of the given topic."""
 
     def __init__(self, llm, topic):
-        # TODO: add a system prompt
         self.llm = llm
         self.topic = topic
 
@@ -25,7 +24,8 @@ class PerspectiveGenerator:
         ]
         try:
             related_topics = self.llm.chat(message)
-            urls = [s[s.find("http") :] for s in related_topics.split("\n")][:-2]
+            urls = [s[s.find("http") :] for s in related_topics.split("\n")]
+            urls = [url for url in urls if is_valid_url(url)]
         except BaseException:
             logger.error("Failed to find related topics.")
             exit()
