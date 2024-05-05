@@ -21,6 +21,7 @@ attrs==23.2.0
     # via referencing
 beautifulsoup4==4.12.3
     # via bs4
+    # via favicon
 blinker==1.8.1
     # via streamlit
 bs4==0.0.2
@@ -38,12 +39,24 @@ click==8.1.7
     # via streamlit
 colorama==0.4.6
     # via griffe
+contourpy==1.2.1
+    # via matplotlib
+cycler==0.12.1
+    # via matplotlib
 distro==1.9.0
     # via groq
     # via openai
+entrypoints==0.4
+    # via streamlit-extras
 exceptiongroup==1.2.0
     # via anyio
     # via pytest
+faker==25.0.1
+    # via streamlit-faker
+favicon==0.7.0
+    # via markdownlit
+fonttools==4.51.0
+    # via matplotlib
 gitdb==4.0.11
     # via gitpython
 gitpython==3.1.43
@@ -54,6 +67,10 @@ groq==0.5.0
     # via sine
 h11==0.14.0
     # via httpcore
+htbuilder==0.6.2
+    # via markdownlit
+    # via st-annotated-text
+    # via streamlit-extras
 httpcore==1.0.4
     # via httpx
 httpx==0.27.0
@@ -70,20 +87,38 @@ iniconfig==2.0.0
 jinja2==3.1.3
     # via altair
     # via pydeck
+    # via streamlit-camera-input-live
+    # via streamlit-image-coordinates
+    # via streamlit-keyup
 jsonschema==4.22.0
     # via altair
 jsonschema-specifications==2023.12.1
     # via jsonschema
+kiwisolver==1.4.5
+    # via matplotlib
+lxml==5.2.1
+    # via markdownlit
+markdown==3.6
+    # via markdownlit
+    # via pymdown-extensions
 markdown-it-py==3.0.0
     # via rich
+markdownlit==0.0.7
+    # via streamlit-extras
 markupsafe==2.1.5
     # via jinja2
+matplotlib==3.8.4
+    # via streamlit-faker
 mdurl==0.1.2
     # via markdown-it-py
+more-itertools==10.2.0
+    # via htbuilder
 multidict==6.0.5
     # via yarl
 numpy==1.26.4
     # via altair
+    # via contourpy
+    # via matplotlib
     # via pandas
     # via pyarrow
     # via pydeck
@@ -93,19 +128,25 @@ openai==1.14.2
     # via sine
 packaging==24.0
     # via altair
+    # via matplotlib
     # via pytest
     # via streamlit
 pandas==2.2.2
     # via altair
     # via streamlit
+    # via streamlit-shadcn-ui
 phx-class-registry==4.1.0
     # via sine
 pillow==10.3.0
+    # via matplotlib
     # via streamlit
 pluggy==1.4.0
     # via pytest
+prometheus-client==0.20.0
+    # via streamlit-extras
 protobuf==4.25.3
     # via streamlit
+    # via streamlit-extras
 pyarrow==16.0.0
     # via streamlit
 pydantic==2.6.4
@@ -120,16 +161,25 @@ pygments==2.18.0
     # via rich
 pyjwt==2.8.0
     # via zhipuai
+pymdown-extensions==10.8.1
+    # via markdownlit
+pyparsing==3.1.2
+    # via matplotlib
 pytest==8.1.1
     # via sine
 python-dateutil==2.9.0.post0
+    # via faker
+    # via matplotlib
     # via pandas
 pytz==2024.1
     # via pandas
+pyyaml==6.0.1
+    # via pymdown-extensions
 referencing==0.35.1
     # via jsonschema
     # via jsonschema-specifications
 requests==2.31.0
+    # via favicon
     # via sine
     # via streamlit
 rich==13.7.1
@@ -150,8 +200,43 @@ sniffio==1.3.1
     # via openai
 soupsieve==2.5
     # via beautifulsoup4
+st-annotated-text==4.0.1
+    # via streamlit-extras
 streamlit==1.34.0
+    # via markdownlit
     # via sine
+    # via streamlit-camera-input-live
+    # via streamlit-card
+    # via streamlit-embedcode
+    # via streamlit-extras
+    # via streamlit-faker
+    # via streamlit-image-coordinates
+    # via streamlit-keyup
+    # via streamlit-shadcn-ui
+    # via streamlit-toggle-switch
+    # via streamlit-vertical-slider
+streamlit-camera-input-live==0.2.0
+    # via streamlit-extras
+streamlit-card==1.0.0
+    # via streamlit-extras
+streamlit-embedcode==0.1.2
+    # via streamlit-extras
+streamlit-extras==0.4.2
+    # via markdownlit
+    # via streamlit-faker
+    # via streamlit-shadcn-ui
+streamlit-faker==0.0.3
+    # via streamlit-extras
+streamlit-image-coordinates==0.1.6
+    # via streamlit-extras
+streamlit-keyup==0.2.4
+    # via streamlit-extras
+streamlit-shadcn-ui==0.1.18
+    # via sine
+streamlit-toggle-switch==1.0.2
+    # via streamlit-extras
+streamlit-vertical-slider==2.5.5
+    # via streamlit-extras
 tenacity==8.2.3
     # via streamlit
 toml==0.10.2
@@ -176,6 +261,8 @@ tzdata==2024.1
     # via pandas
 urllib3==2.2.1
     # via requests
+validators==0.28.1
+    # via streamlit-extras
 yarl==1.9.4
     # via sine
 zhipuai==2.0.1
