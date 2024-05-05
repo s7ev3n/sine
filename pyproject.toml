@@ -18,6 +18,7 @@ dependencies = [
     "bs4>=0.0.2",
     "streamlit>=1.33.0",
     "yarl>=1.9.4",
+    "streamlit-shadcn-ui>=0.1.18",
 ]
 readme = "README.md"
 requires-python = ">= 3.10"
