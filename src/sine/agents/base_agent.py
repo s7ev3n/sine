@@ -1,4 +1,4 @@
-
+'''from https://github.com/InternLM/lagent/blob/main/lagent/agents/base_agent.py'''
 
 class BaseAgent:
     """Base agent of all agents.
