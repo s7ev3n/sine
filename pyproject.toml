@@ -19,6 +19,7 @@ dependencies = [
     "streamlit>=1.33.0",
     "yarl>=1.9.4",
     "streamlit-shadcn-ui>=0.1.18",
+    "python-dotenv>=1.0.1",
 ]
 readme = "README.md"
 requires-python = ">= 3.10"
