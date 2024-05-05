@@ -65,3 +65,19 @@ The topic of the page: {topic}
 The section you need to write: {section_title}
 Write the section with proper inline citations (Start your writing with # section title. Don't include the page tile or try to write other sections):\n
 """
+
+# lead section is In Wikipedia, the lead section is an introduction to an article and a summary of its most important contents. 
+# It is located at the beginning of the article, before the table of contents and the first heading
+WRITE_LEAD_SECTION = """Write a lead section for the given Wikipedia page with the following guidelines:
+1. The lead should stand on its own as a concise overview of the article's topic. It should identify the topic, establish context, explain why the topic is notable, and summarize the most important points, including any prominent controversies.
+2. The lead section should be concise and contain no more than four well-composed paragraphs.
+3. The lead section should be carefully sourced as appropriate. Add inline citations (e.g., "Washington, D.C., is the capital of the United States.[1][3].") where necessary.
+The topic of the page:\n {topic}
+The draft page:\n {draft_page}
+Now, write the lead section:\n
+"""
+
+POLISH_PAGE = """You are a faithful text editor that is good at finding repeated information in the article and deleting them to make sure there is no repetition in the article. You won't delete any non-repeated part in the article. You will keep the inline citations and article structure (indicated by "#", "##", etc.) appropriately. Do your job for the following article.
+The draft article:\n {draft_page}
+Now, revise the draft article: \n
+"""
