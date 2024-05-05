@@ -78,18 +78,26 @@ class ArticleWriter:
             info += '\n\n'
         return info
 
-    def write_section(self, topic, section_title, vector_db):
-        """Section writer writes the content of each section based on the outline
-            title and the related collected results."""
+    def write_section(self, topic, section_title, section_retrievals, sub_section_outline = None):
+        """Section writer writes the content of each section based on retrievals and section outline.
+        
+        NOTE: The section writer only writes the first level sections, sub-section titles are used for
+        retrieving information from search results, and the subsections generated are not following
+        strictly the generated outline in previous steps. But you could customized to generate following
+        subsection outlines.
+        See the issue for detail reason: `https://github.com/stanford-oval/storm/issues/30`
+        
+        Args:
+            topic (str): the topic of this article
+            section_retrievals (str): the information retrieved from the subsection titles using vector search
+            sub_section_outline (str): the subsection outline string in markdown format (e.g. ##subtitles)
 
-        # search for section related snippets from vector_db
-        selected_snippets = vector_db.search([section_title], top_k=10)
-        info = self._format_snippet(selected_snippets)
+        """
 
         message = [
             dict(role='user',
                  content=WRITE_SECTION.format(
-                     info=info,
+                     info=section_retrievals,
                      topic=topic,
                      section_title=section_title)),
         ]
@@ -114,9 +122,10 @@ class ArticleWriter:
         outline_tree = list(outline_tree.values())[0]
 
         article = []
-        for section in outline_tree:
-            logger.info(f"Writing section: {section}")
-            section_content = self.write_section(topic, section, vector_db)
+        for section_title in outline_tree:
+            logger.info(f"Writing section: {section_title}")
+            retrievals = vector_db.search([section_title], top_k = 10)
+            section_content = self.write_section(topic, section_title, retrievals)
             article.append(section_content)
 
         article_md_str = ''
