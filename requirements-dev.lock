@@ -171,6 +171,8 @@ python-dateutil==2.9.0.post0
     # via faker
     # via matplotlib
     # via pandas
+python-dotenv==1.0.1
+    # via sine
 pytz==2024.1
     # via pandas
 pyyaml==6.0.1
