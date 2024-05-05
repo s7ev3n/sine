@@ -3,6 +3,7 @@ import time
 
 import streamlit as st
 import streamlit_shadcn_ui as ui
+from dotenv import load_dotenv
 from streamlit.runtime.scriptrunner import add_script_run_ctx
 from streamlit.runtime.scriptrunner.script_run_context import \
     get_script_run_ctx
@@ -15,6 +16,7 @@ st.set_page_config(
      initial_sidebar_state="collapsed",
 )
 
+load_dotenv()
 class DisplayLogs:
     def __init__(self):
         self.displayed_logs = ''
@@ -58,6 +60,12 @@ def log_ui(disp_log, storm_agent):
                 placeholder.code(log)
             time.sleep(0.1)
 
+        disp_log.close_log()
+
+def article_ui(topic_of_interest, article_md_str):
+    with st.expander(f"{topic_of_interest}"):
+        st.markdown(article_md_str)
+
 def main():
     st.markdown("""
                 <div style="text-align: center;">
@@ -83,8 +91,6 @@ def main():
 
     # run storm agent
     if topic_of_interest != '':
-        topic = topic_of_interest.lower().strip().replace(' ', '_')
-
         # init storm agent thread
         cfg = STORMConfig(topic = topic_of_interest)
         storm_agent = STORM(cfg)
@@ -97,11 +103,15 @@ def main():
         ctx = get_script_run_ctx()
         add_script_run_ctx(log_thread, ctx)
 
+        # start storm pipeline and logging
         storm_thread.start()
         log_thread.start()
 
+        # display log using a while loop
         log_ui(disp_log, storm_agent)
 
+        # display the final article
+        article_ui(topic_of_interest, storm_agent.final_article)
 
     # display_featured_article()
 

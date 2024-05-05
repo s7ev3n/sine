@@ -17,6 +17,18 @@ def save_json(file_path, data):
 
     return True
 
+def save_txt(file_path, data):
+    with open(file_path, 'w') as f:
+        f.write(data)
+
+    return True
+
+def load_txt(file_path):
+    with open(file_path) as f:
+        data = f.read()
+
+    return data
+
 def get_wiki_page_title_and_toc(url):
     """Get the main title and table of contents from an url of a Wikipedia page."""
 
