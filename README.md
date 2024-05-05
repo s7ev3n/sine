@@ -15,11 +15,12 @@ Sine currently has two agents:
 
 ## Get started
 
+### Environment
 We use [rye](https://rye-up.com) as python package manager, install it by `curl -sSf https://rye-up.com/get | bash`, and simply `rye sync` to install the dependencies.
 
-Next, apply language model apis and put API_KEY to your local `.env` file under root, currently support models: `groq`, `glm-4`, and `moonshot` which all provide free api calls.
+Next, apply large language model apis, rename env file (`mv .env.example .env`), and replace `API_KEY`s in your local `.env` file. Currently support models: `groq`, `glm-4`, and `moonshot` which all provide free api calls.
 
-### STORM Agent
+### Run STORM Agent
 
 STORM agent has a simple streamlit ui, start the ui:
 `streamlit run app/storm_streamlit.py` and open the link in the broswer.
