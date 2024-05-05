@@ -1,5 +1,5 @@
 from sine.agents.storm.prompts import (REFINE_OUTLINE, WRITE_DRAFT_OUTLINE,
-                                       WRITE_SECTION)
+                                       WRITE_SECTION, WRITE_LEAD_SECTION, POLISH_PAGE)
 from sine.agents.storm.utils import (clean_up_outline,
                                      limit_word_count_preserve_newline,
                                      process_table_of_contents)
@@ -133,3 +133,38 @@ class ArticleWriter:
             article_md_str += section
 
         return article, article_md_str
+
+class LeadSectionWriter:
+    """Write lead section which is the summary of the whole article.
+    Lead section should be at the very top the article, even before introduction.
+    """
+
+    def __init__(self, writer_llm) -> None:
+        self.llm = writer_llm
+    
+    def write(self, topic, draft_article):
+        message = [
+            dict(role="user", 
+                 content=WRITE_LEAD_SECTION.format(topic=topic,
+                                                   draft_article=draft_article)),
+        ]
+
+        response = self.llm.chat(message)
+
+        return response
+
+class ArticlePolishWriter:
+    """Article polishing is removing duplicated paragraph."""
+
+    def __init__(self, writer_engine) -> None:
+        self.llm = writer_engine
+
+    def polish(self, draft_article):
+        message = [
+            dict(role="user", 
+                 content=POLISH_PAGE.format(draft_article=draft_article)),
+        ]
+
+        response = self.llm.chat(message)
+
+        return response

@@ -78,6 +78,6 @@ Now, write the lead section:\n
 """
 
 POLISH_PAGE = """You are a faithful text editor that is good at finding repeated information in the article and deleting them to make sure there is no repetition in the article. You won't delete any non-repeated part in the article. You will keep the inline citations and article structure (indicated by "#", "##", etc.) appropriately. Do your job for the following article.
-The draft article:\n {draft_page}
+The draft article:\n {draft_article}
 Now, revise the draft article: \n
 """
