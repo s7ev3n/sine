@@ -55,8 +55,15 @@ faker==25.0.1
     # via streamlit-faker
 favicon==0.7.0
     # via markdownlit
+filelock==3.14.0
+    # via huggingface-hub
+    # via torch
+    # via transformers
 fonttools==4.51.0
     # via matplotlib
+fsspec==2024.3.1
+    # via huggingface-hub
+    # via torch
 gitdb==4.0.11
     # via gitpython
 gitpython==3.1.43
@@ -77,6 +84,10 @@ httpx==0.27.0
     # via groq
     # via openai
     # via zhipuai
+huggingface-hub==0.23.0
+    # via sentence-transformers
+    # via tokenizers
+    # via transformers
 idna==3.6
     # via anyio
     # via httpx
@@ -90,6 +101,9 @@ jinja2==3.1.3
     # via streamlit-camera-input-live
     # via streamlit-image-coordinates
     # via streamlit-keyup
+    # via torch
+joblib==1.4.2
+    # via scikit-learn
 jsonschema==4.22.0
     # via altair
 jsonschema-specifications==2023.12.1
@@ -113,8 +127,12 @@ mdurl==0.1.2
     # via markdown-it-py
 more-itertools==10.2.0
     # via htbuilder
+mpmath==1.3.0
+    # via sympy
 multidict==6.0.5
     # via yarl
+networkx==3.3
+    # via torch
 numpy==1.26.4
     # via altair
     # via contourpy
@@ -122,15 +140,21 @@ numpy==1.26.4
     # via pandas
     # via pyarrow
     # via pydeck
+    # via scikit-learn
+    # via scipy
+    # via sentence-transformers
     # via sine
     # via streamlit
+    # via transformers
 openai==1.14.2
     # via sine
 packaging==24.0
     # via altair
+    # via huggingface-hub
     # via matplotlib
     # via pytest
     # via streamlit
+    # via transformers
 pandas==2.2.2
     # via altair
     # via streamlit
@@ -139,6 +163,7 @@ phx-class-registry==4.1.0
     # via sine
 pillow==10.3.0
     # via matplotlib
+    # via sentence-transformers
     # via streamlit
 pluggy==1.4.0
     # via pytest
@@ -176,19 +201,34 @@ python-dotenv==1.0.1
 pytz==2024.1
     # via pandas
 pyyaml==6.0.1
+    # via huggingface-hub
     # via pymdown-extensions
+    # via transformers
 referencing==0.35.1
     # via jsonschema
     # via jsonschema-specifications
+regex==2024.4.28
+    # via transformers
 requests==2.31.0
     # via favicon
+    # via huggingface-hub
     # via sine
     # via streamlit
+    # via transformers
 rich==13.7.1
     # via streamlit
 rpds-py==0.18.0
     # via jsonschema
     # via referencing
+safetensors==0.4.3
+    # via transformers
+scikit-learn==1.4.2
+    # via sentence-transformers
+scipy==1.13.0
+    # via scikit-learn
+    # via sentence-transformers
+sentence-transformers==2.7.0
+    # via sine
 setuptools==69.2.0
     # via sine
 six==1.16.0
@@ -239,26 +279,41 @@ streamlit-toggle-switch==1.0.2
     # via streamlit-extras
 streamlit-vertical-slider==2.5.5
     # via streamlit-extras
+sympy==1.12
+    # via torch
 tenacity==8.2.3
     # via streamlit
+threadpoolctl==3.5.0
+    # via scikit-learn
+tokenizers==0.19.1
+    # via transformers
 toml==0.10.2
     # via streamlit
 tomli==2.0.1
     # via pytest
 toolz==0.12.1
     # via altair
+torch==2.3.0
+    # via sentence-transformers
 tornado==6.4
     # via streamlit
 tqdm==4.66.2
+    # via huggingface-hub
     # via openai
+    # via sentence-transformers
+    # via transformers
+transformers==4.40.1
+    # via sentence-transformers
 typing-extensions==4.10.0
     # via altair
     # via anyio
     # via groq
+    # via huggingface-hub
     # via openai
     # via pydantic
     # via pydantic-core
     # via streamlit
+    # via torch
 tzdata==2024.1
     # via pandas
 urllib3==2.2.1
