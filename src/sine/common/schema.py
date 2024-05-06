@@ -2,11 +2,12 @@ from dataclasses import dataclass, field
 from enum import IntEnum
 from typing import List, Optional, Union
 
+
 class ActionStatusCode(IntEnum):
     ING = 1
     SUCCESS = 0
     HTTP_ERROR = -1000  # http error
-    ARGS_ERROR = -1001  # args error 
+    ARGS_ERROR = -1001  # args error
     API_ERROR = -1002  # api error
 
 
@@ -75,3 +76,9 @@ class AgentReturn:
     response: str = ''
     inner_steps: List = field(default_factory=list)
     errmsg: Optional[str] = None
+
+
+@dataclass
+class Information:
+    uuid: str
+    meta: dict
