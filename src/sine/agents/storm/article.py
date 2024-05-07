@@ -1,4 +1,3 @@
-from abc import ABC
 from typing import Dict, List, Optional
 
 from sine.common.logger import logger
@@ -23,7 +22,7 @@ class SectionNode:
     def remove_child(self, child):
         self.children.remove(child)
 
-class Article(ABC):
+class Article:
     """Article is consist of ArticleNodes in a Tree Data Structure.
 
     Article level:
@@ -39,6 +38,10 @@ class Article(ABC):
 
     def __init__(self, topic_name):
         self.root = SectionNode(section_name=topic_name, level=0)
+
+    @property
+    def topic(self):
+        return self.root.section_name
 
     def get_first_level_outline(self) -> List[str]:
         """Get first level artilce outline, i.e. the first level of section names of the article."""

@@ -4,6 +4,7 @@ import time
 from dataclasses import dataclass
 from enum import Enum, unique
 
+from sine.agents.storm.article import Article
 from sine.agents.storm.conversation import Conversation
 from sine.agents.storm.expert import Expert
 from sine.agents.storm.perspectivist import PerspectiveGenerator, Perspectivist
@@ -40,7 +41,7 @@ class STORM:
     def __init__(self, cfg: STORMConfig) -> None:
         self.cfg = cfg
         self.state = STORMStatus.STANDBY
-        self.final_article = None
+        self.final_article = Article(self.cfg.topic)
         log_str = f"STORM config:\ntopic: {self.cfg.topic}\nmax_perspectivist: {self.cfg.max_perspectivist}" + \
                 f"\nmax_conversation_turn: {self.cfg.max_conversation_turn}" + \
                 f"\nconversation_llm:{self.cfg.conversation_llm}" + \
