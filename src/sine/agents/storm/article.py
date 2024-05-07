@@ -7,7 +7,7 @@ from sine.common.logger import logger
 class SectionNode:
     """SectionNode is abstraction of (sub)sections of an article. Article is consist of SectionNodes."""
 
-    def __init__(self, section_name: str, level: int, content=None) -> None:
+    def __init__(self, section_name: str, level: int, content: str = None) -> None:
         self.section_name = section_name
         self.level = level # topic is level 0, # is level 1, etc
         self.content = content
@@ -26,6 +26,13 @@ class SectionNode:
 class Article(ABC):
     """Article is consist of ArticleNodes in a Tree Data Structure.
 
+    Article level:
+        topic         : level 0
+        section       : level 1
+        subsection    : level 2
+        subsubsection : level 3
+        etc...
+
     NOTE: Article is abstraction and operation for the outline of the article,
     and writer generates content for each SectionNode.
     """
@@ -33,24 +40,13 @@ class Article(ABC):
     def __init__(self, topic_name):
         self.root = SectionNode(section_name=topic_name, level=0)
 
-    def get_outline_tree(self):
-
-        def build_tree(node) -> Dict[str, Dict]:
-            tree = {}
-            for child in node.children:
-                tree[child.section_name] = build_tree(child)
-
-            return tree if tree else {}
-
-        return build_tree(self.root)
-
-    def get_first_level_section_names(self) -> List[str]:
-        """Get first level section names of the article, i.e. the first level of artilce outline."""
+    def get_first_level_outline(self) -> List[str]:
+        """Get first level artilce outline, i.e. the first level of section names of the article."""
 
         return [i.section_name for i in self.root.children]
 
-    def get_subsection_names_as_list(self, section_name: str, with_hashtags: bool = False) -> List[str]:
-        """Get the list of subsection names under a section."""
+    def get_sublevel_outline_as_list(self, section_name: str, with_hashtags: bool = False) -> List[str]:
+        """Get the list of subsection names under a section, including the section_name itself."""
 
         section_node = self.find_section(self.root, section_name)
         if not section_node:
@@ -60,7 +56,7 @@ class Article(ABC):
         subsection_names = []
 
         def preorder_traverse(node):
-            prefix = "#" * node.level if with_hashtags else ""  # Adjust level if excluding root
+            prefix = "#" * node.level if with_hashtags else ""
             subsection_names.append(f"{prefix} {node.section_name}".strip() if with_hashtags else node.section_name)
             for child in node.children:
                 preorder_traverse(child)
@@ -90,32 +86,88 @@ class Article(ABC):
 
         return None
 
-    @classmethod
-    def from_dict(cls, topic: str, article_dict: Dict):
-        """Construct article from article dict.
+    def update_section_content(self, section_name: str, content: str):
+        """Update the content of the section with the given section name."""
 
-        Args:
-            article_dict: article dict a nested dict where key is section name and value is content
+        section_node = self.find_section(self.root, section_name)
+        if not section_node:
+            logger.error(f"Section {section_name} not found.")
+            return
 
-        Returns:
-            Article object
-        """
+        section_node.content = content
+
+    def add_new_subsection(self, parent_section_name: str, new_section_name: str, content: str = None):
+        """Add new sublevel section to sepcific section."""
+
+        parent_section_node = self.find_section(self.root, parent_section_name)
+        if not parent_section_node:
+            logger.error(f"Parent section {parent_section_name} not found.")
+            return
+
+        new_section_node = SectionNode(new_section_name, parent_section_node.level + 1, content)
+        parent_section_node.add_child(new_section_node)
 
     def to_dict(self):
-        pass
+        """Export Article instance to article dict.
 
-    def string(self):
-        """export article to string in markdown format."""
+        article_dict format:
+        {
+            'section_name': {
+                'content': 'content of the section',
+                'subsections': {
+                    'subsection_name': {
+                        'content': 'content of the subsection',
+                        'subsections': {
+                            // etc ...
+                        }
+                    }
+                }
+            }
+        }
+        """
+
+        def transverse_tree(node) -> Dict[str, Dict]:
+            tree = {
+                node.section_name: {
+                    'content' : node.content,
+                    'subsections': {}
+                }
+            }
+
+            for child in node.children:
+                tree[node.section_name]['subsections'].update(transverse_tree(child))
+
+            return tree if tree else {}
+
+        return transverse_tree(self.root)
+
+    def to_string(self):
+        """Export the whole article to string in markdown format."""
+
+        article_str = ''
+
+        def traverse_tree(node):
+            nonlocal article_str
+            article_str += f"{'#' * node.level} {node.section_name}\n"
+            if node.content:
+                article_str += f"{node.content}\n"
+
+            for child in node.children:
+                traverse_tree(child)
+
+        traverse_tree(self.root)
+
+        return article_str
 
     @classmethod
-    def from_outline_string(cls, topic: str, outline: str):
-        """Construct article with outline from outline string.
+    def create_from_outline_string(cls, topic: str, outline: str):
+        """Construct Article instance's outline from outline string.
 
         Args:
             outline: outline string in markdown format where section has hashtag (#)
 
         Returns:
-            Article instance with outline
+            Article instance with outline, i.e. the tree structure of the article
         """
         lines = []
         try:
@@ -126,7 +178,7 @@ class Article(ABC):
                 logger.critical("Error in parsing outline string, no outline structure found.")
             exit()
 
-        article = cls(topic, 0) # topic as the root node
+        article = cls(topic) # topic as the root node
 
         # deal with the case where topic is the first line of the outline and with # hashtag
         is_topic_first_line = lines[0].startswith('#') and \
