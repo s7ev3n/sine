@@ -120,18 +120,20 @@ class STORM:
         # step 2: let us generate the outline based on the conversation history
         outline_p = os.path.join(storm_save_dir, "outline.txt")
         if os.path.exists(outline_p):
-            outline = load_txt(outline_p)
+            outline_str = load_txt(outline_p)
+            outline = Article.create_from_outline_string(topic=self.cfg.topic, outline=outline_str)
         else:
             outline = self.outline_writer.write(self.cfg.topic, conversation_history)
-            save_txt(outline_p, outline)
+            save_txt(outline_p, outline.to_string())
 
         # step 3: let us write the article section by section
         self.vector_search.encoding(search_results)
-        article, article_str = self.article_writer.write(self.cfg.topic, outline, self.vector_search)
+        article = self.article_writer.write(self.cfg.topic, outline, self.vector_search)
 
         # step 4: post process the article
 
-        self.final_article = article_str
+        self.final_article = article.to_string()
         self.state = STORMStatus.STOP
+        save_txt(f"{topic_str}.txt", self.final_article)
 
         return True

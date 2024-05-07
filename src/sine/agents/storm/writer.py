@@ -148,7 +148,7 @@ class ArticleWriter(Writer):
         # for section in article:
         #     article_md_str += section
 
-        first_level_outline = article_outline.get_first_level_outline()
+        first_level_outline = article_outline.get_section_names()
         for section_name in first_level_outline:
             logger.info(f"Writing section: {section_name}")
             section_queries = article_outline.get_sublevel_outline_as_list(section_name)

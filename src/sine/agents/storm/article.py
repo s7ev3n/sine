@@ -26,10 +26,11 @@ class Article:
     """Article is consist of ArticleNodes in a Tree Data Structure.
 
     Article level:
-        topic         : level 0
-        section       : level 1
-        subsection    : level 2
-        subsubsection : level 3
+        topic         : level 0 (no hashtag)
+        title         : level 1 (#)
+        section       : level 2 (##)
+        subsection    : level 3 (###)
+        subsubsection : level 4 (####)
         etc...
 
     NOTE: Article is abstraction and operation for the outline of the article,
@@ -43,10 +44,13 @@ class Article:
     def topic(self):
         return self.root.section_name
 
-    def get_first_level_outline(self) -> List[str]:
+    def get_section_names(self) -> List[str]:
         """Get first level artilce outline, i.e. the first level of section names of the article."""
+        assert len(self.root.children) > 0, "No article title found."
+        assert len(self.root.children) < 2, f"Found {len(self.root.children)} titles."
 
-        return [i.section_name for i in self.root.children]
+        title_node = self.root.children[0]
+        return [i.section_name for i in title_node.children]
 
     def get_sublevel_outline_as_list(self, section_name: str, with_hashtags: bool = False) -> List[str]:
         """Get the list of subsection names under a section, including the section_name itself."""
@@ -151,7 +155,8 @@ class Article:
 
         def traverse_tree(node):
             nonlocal article_str
-            article_str += f"{'#' * node.level} {node.section_name}\n"
+            if node.level:
+                article_str += f"{'#' * node.level} {node.section_name}\n"
             if node.content:
                 article_str += f"{node.content}\n"
 
