@@ -84,6 +84,8 @@ class ArticleWriter(Writer):
 
     def __init__(self, writer_llm) -> None:
         super().__init__(writer_llm)
+        # TODO: manage all the citations of retrieved results, especially its consistent ids
+        self.citation_manager = None 
 
     def _format_snippet(self, snippets):
         info = ''
@@ -95,7 +97,7 @@ class ArticleWriter(Writer):
     def write_section(self, topic, section_title, section_retrievals, sub_section_outline = None):
         """Section writer writes the content of each section based on retrievals and section outline.
 
-        NOTE: The section writer only writes the first level sections, sub-section titles are used for
+        NOTE: The section writer only writes the first level sections, subsections' titles are used for
         retrieving information from search results, and the subsections generated are not following
         strictly the generated outline in previous steps. But you could customized to generate following
         subsection outlines.
@@ -133,19 +135,6 @@ class ArticleWriter(Writer):
         but mind the rate limit of the API.
         TODO: retriever abstraction
         """
-        # outline_tree = process_table_of_contents(outline)
-        # outline_tree = list(outline_tree.values())[0]
-
-        # article = []
-        # for section_title in outline_tree:
-        #     logger.info(f"Writing section: {section_title}")
-        #     retrievals = retriever.search([section_title], top_k = 10)
-        #     section_content = self.write_section(topic, section_title, retrievals)
-        #     article.append(section_content)
-
-        # article_md_str = ''
-        # for section in article:
-        #     article_md_str += section
 
         first_level_outline = article_outline.get_section_names()
         for section_name in first_level_outline:
@@ -153,8 +142,10 @@ class ArticleWriter(Writer):
             section_queries = article_outline.get_sublevel_outline_as_list(section_name)
             retrievals = retriever.search(section_queries, top_k = 10)
             section_content = self.write_section(topic, section_name, retrievals)
+            # FIXME: the section content SectionWriter generates will have new sub(sub)sections
+            # the article_outline's sub(sub)sections generated in previous steps will be of no
+            # use, here you should have a new article instance
             article_outline.update_section_content(section_name, section_content)
-
 
         return article_outline
 
