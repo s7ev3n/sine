@@ -259,3 +259,4 @@ poetry.toml
 
 #local 
 .local
+.sine

@@ -107,44 +107,6 @@ def clean_up_outline(outline, topic=""):
     return outline
 
 
-def process_table_of_contents(toc):
-    """Convert a table of contents into a tree structure.
-
-    The table of contents is a string with each line representing a heading.
-    "#" Title"  indicates section title, "##" Title" to indication subsection title, "###" Title" to indicate subsubsection title, and so on.
-    """
-    lines = toc.split("\n")
-
-    root = {}
-    path = [(root, -1)]
-
-    for line in lines:
-        line = line.strip()
-        if not line.startswith("#"):
-            continue
-
-        # Count only the leading '#' symbols
-        level = 0
-        for char in line:
-            if char == "#":
-                level += 1
-            else:
-                break
-
-        heading = line[level:].strip()
-        if len(heading) == 0:
-            continue
-        while path and path[-1][1] >= level:
-            path.pop()
-
-        # Add the new heading
-        if path:
-            current_dict = path[-1][0]
-            current_dict[heading] = {}
-            path.append((current_dict[heading], level))
-
-    return root
-
 def limit_word_count_preserve_newline(input_string, max_word_count):
         """
         Limit the word count of an input string to a specified maximum, while preserving the integrity of complete lines.

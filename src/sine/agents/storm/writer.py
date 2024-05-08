@@ -5,8 +5,7 @@ from sine.agents.storm.prompts import (POLISH_PAGE, REFINE_OUTLINE,
                                        WRITE_DRAFT_OUTLINE, WRITE_LEAD_SECTION,
                                        WRITE_SECTION)
 from sine.agents.storm.utils import (clean_up_outline,
-                                     limit_word_count_preserve_newline,
-                                     process_table_of_contents)
+                                     limit_word_count_preserve_newline)
 from sine.common.logger import logger
 
 
