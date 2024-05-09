@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-
-from sine.agents.storm.article import Article
+import copy
+from sine.agents.storm.article import Article, ArticleNode
 from sine.agents.storm.prompts import (POLISH_PAGE, REFINE_OUTLINE,
                                        WRITE_DRAFT_OUTLINE, WRITE_LEAD_SECTION,
                                        WRITE_SECTION)
@@ -135,19 +135,20 @@ class ArticleWriter(Writer):
         but mind the rate limit of the API.
         TODO: retriever abstraction
         """
-
-        first_level_outline = article_outline.get_section_names()
-        for section_name in first_level_outline:
-            logger.info(f"Writing section: {section_name}")
-            section_queries = article_outline.get_sublevel_outline_as_list(section_name)
+        final_article = copy.deepcopy(article_outline).remove_subsection_nodes()
+        sections_to_write = final_article.get_sections()
+        for section_node in sections_to_write:
+            logger.info(f"Writing section: {section_node.section_name}")
+            # article_outline's subsections are used for retrieval
+            section_node_outline = article_outline.find(section_node.section_name)
+            section_queries = section_node_outline.get_children_names(include_self = True)
             retrievals = retriever.search(section_queries, top_k = 10)
-            section_content = self.write_section(topic, section_name, retrievals)
-            # FIXME: the section content SectionWriter generates will have new sub(sub)sections
-            # the article_outline's sub(sub)sections generated in previous steps will be of no
-            # use, here you should have a new article instance
-            article_outline.update_section_content(section_name, section_content)
+            
+            section_content = self.write_section(topic, section_node.section_name, retrievals)           
+            section_content_node = ArticleNode.create_from_markdown(section_content)
+            section_node.add_child(section_content_node)
 
-        return article_outline
+        return final_article
 
 class LeadSectionWriter(Writer):
     """Write lead section which is the summary of the whole article.

@@ -6,6 +6,7 @@ class Reference:
     url: str
     content: str
     citation_id: int
+    selected: bool
 
 class CitationManager:
     '''CitationManager manages citations in AriticleWriter.'''
