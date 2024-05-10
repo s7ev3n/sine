@@ -1,6 +1,7 @@
 from typing import Dict, List, Optional
 
 from sine.common.logger import logger
+from sine.common.utils import save_txt
 
 
 class ArticleNode:
@@ -25,16 +26,16 @@ class ArticleNode:
         self.children.remove(child)
 
         return True
-    
+
     def update_content(self, content_str):
         self.content = content_str
-        
+
         return True
 
     def remove_content(self):
         if self.content:
             self.content = None
-        
+
         return True
 
     def to_dict(self) -> Dict[str, Dict]:
@@ -43,7 +44,7 @@ class ArticleNode:
         {
             'section_name': {
                 'content': 'content of the section',
-                'level': 1, 
+                'level': 1,
                 'children': [
                     'subsection_name_1': {
                         'content': 'content of the subsection',
@@ -100,8 +101,8 @@ class ArticleNode:
         traverse_tree(self)
 
         return node_str
-    
-    def find_node(self, name: str):
+
+    def find_node(self, node_name: str):
         """
         Return the node of the section given the section name.
 
@@ -112,11 +113,11 @@ class ArticleNode:
         Return:
             reference of the node or None if section name has no match
         """
-        if self.section_name == name:
+        if self.section_name == node_name:
             return self
 
         for child in self.children:
-            result = self.find_node(child, child.section_name)
+            result = child.find_node(node_name)
             if result:
                 return result
 
@@ -143,7 +144,7 @@ class ArticleNode:
     @classmethod
     def create_from_markdown(cls, markdown: str):
         """Create a SectionNode from markdown string."""
-        
+
         lines = []
         try:
             lines = markdown.split('\n')
@@ -228,12 +229,12 @@ class Article:
 
         Return:
             reference of the node or None if section name has no match
-        """        
+        """
 
         return self.root.find_node(section_name)
 
     def remove_subsection_nodes(self):
-        """Clean all the sub(sub)sections, only keeping the sections. 
+        """Clean all the sub(sub)sections, only keeping the sections.
         This is a operation for STORM default section writing step.
         """
         title_node = self.get_title_node()
@@ -257,6 +258,5 @@ class Article:
         article = cls(topic)
         article_node = ArticleNode.create_from_markdown(markdown)
         article.root.add_child(article_node)
-        
+
         return article
-    

@@ -1,5 +1,6 @@
-from abc import ABC, abstractmethod
 import copy
+from abc import ABC, abstractmethod
+
 from sine.agents.storm.article import Article, ArticleNode
 from sine.agents.storm.prompts import (POLISH_PAGE, REFINE_OUTLINE,
                                        WRITE_DRAFT_OUTLINE, WRITE_LEAD_SECTION,
@@ -85,7 +86,7 @@ class ArticleWriter(Writer):
     def __init__(self, writer_llm) -> None:
         super().__init__(writer_llm)
         # TODO: manage all the citations of retrieved results, especially its consistent ids
-        self.citation_manager = None 
+        self.citation_manager = None
 
     def _format_snippet(self, snippets):
         info = ''
@@ -135,16 +136,17 @@ class ArticleWriter(Writer):
         but mind the rate limit of the API.
         TODO: retriever abstraction
         """
-        final_article = copy.deepcopy(article_outline).remove_subsection_nodes()
+        final_article = copy.deepcopy(article_outline)
+        final_article.remove_subsection_nodes()
         sections_to_write = final_article.get_sections()
         for section_node in sections_to_write:
             logger.info(f"Writing section: {section_node.section_name}")
             # article_outline's subsections are used for retrieval
-            section_node_outline = article_outline.find(section_node.section_name)
+            section_node_outline = article_outline.find_section(section_node.section_name)
             section_queries = section_node_outline.get_children_names(include_self = True)
             retrievals = retriever.search(section_queries, top_k = 10)
-            
-            section_content = self.write_section(topic, section_node.section_name, retrievals)           
+
+            section_content = self.write_section(topic, section_node.section_name, retrievals)
             section_content_node = ArticleNode.create_from_markdown(section_content)
             section_node.add_child(section_content_node)
 

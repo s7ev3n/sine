@@ -121,7 +121,7 @@ class STORM:
         outline_p = os.path.join(storm_save_dir, "outline.txt")
         if os.path.exists(outline_p):
             outline_str = load_txt(outline_p)
-            outline = Article.create_from_outline_string(topic=self.cfg.topic, outline=outline_str)
+            outline = Article.create_from_markdown(topic=self.cfg.topic, markdown=outline_str)
         else:
             outline = self.outline_writer.write(self.cfg.topic, conversation_history)
             save_txt(outline_p, outline.to_string())
@@ -131,7 +131,6 @@ class STORM:
         article = self.article_writer.write(self.cfg.topic, outline, self.vector_search)
 
         # step 4: post process the article
-
         self.final_article = article.to_string()
         self.state = STORMStatus.STOP
         save_txt(f"{topic_str}.txt", self.final_article)
