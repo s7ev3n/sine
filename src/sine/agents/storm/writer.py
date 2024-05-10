@@ -111,11 +111,12 @@ class ArticleWriter(Writer):
             sub_section_outline (str): the subsection outline string in markdown format (e.g. ##subtitles)
 
         """
+        retrieval_citation_string = self.citation_manager.to_citation_string(section_retrievals)
 
         message = [
             dict(role='user',
                  content=WRITE_SECTION.format(
-                     info=section_retrievals,
+                     info=retrieval_citation_string,
                      topic=topic,
                      section_title=section_title)),
         ]
@@ -142,16 +143,14 @@ class ArticleWriter(Writer):
         sections_to_write = final_article.get_sections()
         for section_node in sections_to_write:
             logger.info(f"Writing section: {section_node.section_name}")
-            # article_outline's subsections are used for retrieval
+            # First, retrieve: article_outline's subsections are used for retrieval
             section_node_outline = article_outline.find_section(section_node.section_name)
             section_queries = section_node_outline.get_children_names(include_self = True)
-            retrievals = retriever.search(section_queries, top_k = 10)
-
-
+            retrievals = retriever.query(section_queries, top_k = 10)
+            # Then, write section
             section_content = self.write_section(topic, section_node.section_name, retrievals)
+            section_content = self.citation_manager.update_section_citation(section_content, retrievals)
             section_content_node = ArticleNode.create_from_markdown(section_content)
-
-
             section_node.add_child(section_content_node)
 
             time.sleep(10) # hack to avoid api model rate limit
