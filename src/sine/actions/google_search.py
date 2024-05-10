@@ -5,7 +5,7 @@ import requests
 
 from sine.actions.base_action import BaseAction, tool_api
 from sine.actions.parser import BaseParser, JsonParser
-from sine.common.schema import ActionReturn, ActionStatusCode
+from sine.common.schema import ActionReturn, ActionStatusCode, SearchResult
 
 
 class GoogleSearch(BaseAction):
@@ -83,7 +83,7 @@ class GoogleSearch(BaseAction):
             tool_return.state = ActionStatusCode.API_ERROR
         return tool_return
 
-    def parse_results(self, results: dict) -> Union[str, List[str]]:
+    def parse_results(self, results: dict) -> List[SearchResult]:
         """Parse the search results from Serper API.
 
         Args:
@@ -96,14 +96,14 @@ class GoogleSearch(BaseAction):
 
         snippets = []
 
-        if results.get("answerBox"):
-            answer_box = results.get("answerBox", {})
-            if answer_box.get("answer"):
-                return [answer_box.get("answer")]
-            elif answer_box.get("snippet"):
-                return [answer_box.get("snippet").replace("\n", " ")]
-            elif answer_box.get("snippetHighlighted"):
-                return answer_box.get("snippetHighlighted")
+        # if results.get("answerBox"):
+        #     answer_box = results.get("answerBox", {})
+        #     if answer_box.get("answer"):
+        #         return [answer_box.get("answer")]
+        #     elif answer_box.get("snippet"):
+        #         return [answer_box.get("snippet").replace("\n", " ")]
+        #     elif answer_box.get("snippetHighlighted"):
+        #         return answer_box.get("snippetHighlighted")
 
         # if results.get("knowledgeGraph"):
         #     kg = results.get("knowledgeGraph", {})
@@ -119,9 +119,12 @@ class GoogleSearch(BaseAction):
 
         for result in results[self.result_key_for_type[self.search_type]]:
             if "snippet" in result:
-                snippets.append(result["snippet"])
-            # for attribute, value in result.get("attributes", {}).items():
-            #     snippets.append(f"{attribute}: {value}.")
+                search_result = SearchResult(
+                    title=result["title"],
+                    url=result["url"],
+                    snippet=result["snippet"],
+                )
+                snippets.append(search_result)
 
         return snippets
 

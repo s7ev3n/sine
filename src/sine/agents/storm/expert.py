@@ -20,7 +20,7 @@ class Expert:
         collected_results_str = ''
         for result in collected_results:
             collected_results_str += '\n'
-            collected_results_str += result
+            collected_results_str += result.snippet
 
         return dict(
             role="user",

@@ -2,6 +2,8 @@ from dataclasses import dataclass, field
 from enum import IntEnum
 from typing import List, Optional, Union
 
+from sine.common.logger import logger
+
 
 class ActionStatusCode(IntEnum):
     ING = 1
@@ -76,9 +78,3 @@ class AgentReturn:
     response: str = ''
     inner_steps: List = field(default_factory=list)
     errmsg: Optional[str] = None
-
-
-@dataclass
-class Information:
-    uuid: str
-    meta: dict

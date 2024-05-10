@@ -160,7 +160,7 @@ class ArticleNode:
             if line.startswith('#'):
                 level = line.count('#')
                 section_name = line.replace('#', '').strip()
-                new_node = ArticleNode(section_name, level)
+                new_node = cls(section_name, level)
 
                 # pop out all the nodes in the stack that are at lower level
                 while node_stack and level <= node_stack[-1].level:

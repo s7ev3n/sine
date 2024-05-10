@@ -3,6 +3,7 @@ import time
 from abc import ABC, abstractmethod
 
 from sine.agents.storm.article import Article, ArticleNode
+from sine.agents.storm.citation import CitationManager
 from sine.agents.storm.prompts import (POLISH_PAGE, REFINE_OUTLINE,
                                        WRITE_DRAFT_OUTLINE, WRITE_LEAD_SECTION,
                                        WRITE_SECTION)
@@ -86,8 +87,7 @@ class ArticleWriter(Writer):
 
     def __init__(self, writer_llm) -> None:
         super().__init__(writer_llm)
-        # TODO: manage all the citations of retrieved results, especially its consistent ids
-        self.citation_manager = None
+        self.citation_manager = CitationManager()
 
     def _format_snippet(self, snippets):
         info = ''
@@ -107,7 +107,7 @@ class ArticleWriter(Writer):
 
         Args:
             topic (str): the topic of this article
-            section_retrievals (str): the information retrieved from the subsection titles using vector search
+            section_retrievals (List[SearchResult]): the information retrieved from the subsection titles using vector search
             sub_section_outline (str): the subsection outline string in markdown format (e.g. ##subtitles)
 
         """
@@ -147,8 +147,11 @@ class ArticleWriter(Writer):
             section_queries = section_node_outline.get_children_names(include_self = True)
             retrievals = retriever.search(section_queries, top_k = 10)
 
+
             section_content = self.write_section(topic, section_node.section_name, retrievals)
             section_content_node = ArticleNode.create_from_markdown(section_content)
+
+
             section_node.add_child(section_content_node)
 
             time.sleep(10) # hack to avoid api model rate limit
