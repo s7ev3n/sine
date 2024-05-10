@@ -1,4 +1,5 @@
 import copy
+import time
 from abc import ABC, abstractmethod
 
 from sine.agents.storm.article import Article, ArticleNode
@@ -149,6 +150,8 @@ class ArticleWriter(Writer):
             section_content = self.write_section(topic, section_node.section_name, retrievals)
             section_content_node = ArticleNode.create_from_markdown(section_content)
             section_node.add_child(section_content_node)
+
+            time.sleep(10) # hack to avoid api model rate limit
 
         return final_article
 
