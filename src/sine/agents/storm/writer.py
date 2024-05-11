@@ -1,17 +1,32 @@
-from sine.agents.storm.prompts import (REFINE_OUTLINE, WRITE_DRAFT_OUTLINE,
-                                       WRITE_SECTION, WRITE_LEAD_SECTION, POLISH_PAGE)
+import copy
+import time
+from abc import ABC, abstractmethod
+
+from sine.agents.storm.article import Article, ArticleNode
+from sine.agents.storm.citation import CitationManager
+from sine.agents.storm.prompts import (POLISH_PAGE, REFINE_OUTLINE,
+                                       WRITE_DRAFT_OUTLINE, WRITE_LEAD_SECTION,
+                                       WRITE_SECTION)
 from sine.agents.storm.utils import (clean_up_outline,
-                                     limit_word_count_preserve_newline,
-                                     process_table_of_contents)
+                                     limit_word_count_preserve_newline)
 from sine.common.logger import logger
 
 
-class OutlineWriter:
+class Writer(ABC):
+    def __init__(self, writer_llm) -> None:
+        self.llm = writer_llm
+
+    @abstractmethod
+    def write(self, *args, **kwargs) -> Article:
+        """Each writer implement its own write prompts."""
+
+
+class OutlineWriter(Writer):
     """Write draft outline first and then improve based on conversation and
     draft outline."""
 
-    def __init__(self, writer_engine) -> None:
-        self.llm = writer_engine
+    def __init__(self, writer_llm) -> None:
+        super().__init__(writer_llm)
 
     def write_draft_outline(self, topic):
         message = [
@@ -59,45 +74,42 @@ class OutlineWriter:
         conversation = limit_word_count_preserve_newline(conversation, max_word_count=3500)
 
         # improve outline
-        outline = self.refine_outline(topic, draft_outline, conversation)
-        outline = clean_up_outline(outline)
-        logger.info(f"Refined outline (improved by conversation):\n {outline}")
+        outline_str = self.refine_outline(topic, draft_outline, conversation)
+        outline_str = clean_up_outline(outline_str)
+        logger.info(f"Refined outline (improved by conversation):\n {outline_str}")
 
-        return outline
+        article_outline = Article.create_from_outline_string(topic, outline_str)
 
-class ArticleWriter:
+        return article_outline
+
+class ArticleWriter(Writer):
     '''ArticleWriter write section by section.'''
 
-    def __init__(self, writer_engine) -> None:
-        self.llm = writer_engine
-
-    def _format_snippet(self, snippets):
-        info = ''
-        for n, r in enumerate(snippets):
-            info += f'[{n + 1}] ' + '\n'.join([r])
-            info += '\n\n'
-        return info
+    def __init__(self, writer_llm) -> None:
+        super().__init__(writer_llm)
+        self.citation_manager = CitationManager()
 
     def write_section(self, topic, section_title, section_retrievals, sub_section_outline = None):
         """Section writer writes the content of each section based on retrievals and section outline.
-        
-        NOTE: The section writer only writes the first level sections, sub-section titles are used for
+
+        NOTE: The section writer only writes the first level sections, subsections' titles are used for
         retrieving information from search results, and the subsections generated are not following
         strictly the generated outline in previous steps. But you could customized to generate following
         subsection outlines.
         See the issue for detail reason: `https://github.com/stanford-oval/storm/issues/30`
-        
+
         Args:
             topic (str): the topic of this article
-            section_retrievals (str): the information retrieved from the subsection titles using vector search
+            section_retrievals (List[SearchResult]): the information retrieved from the subsection titles using vector search
             sub_section_outline (str): the subsection outline string in markdown format (e.g. ##subtitles)
 
         """
+        retrieval_citation_string = self.citation_manager.snippets_citation_string(section_retrievals)
 
         message = [
             dict(role='user',
                  content=WRITE_SECTION.format(
-                     info=section_retrievals,
+                     info=retrieval_citation_string,
                      topic=topic,
                      section_title=section_title)),
         ]
@@ -106,63 +118,76 @@ class ArticleWriter:
 
         return response
 
-    def write(self, topic, outline, vector_db):
+    def write(self, topic: str, article_outline: Article, retriever) -> Article:
         """ Write the article section by section.
 
         Args:
-            topic (str): topic of interest
-            outline (str): outline of the article, with markdown hash tags,
-                            e.g. #, ## indicating section and subsections etc
-            vector_db (str): search section related info from vector_db
+            topic     : topic of interest
+            outline   : outline of the article, with markdown hash tags,
+                        e.g. #, ## indicating section and subsections etc
+            retriever : search section related info from retriever
 
         TODO: use concurrent.futures.ThreadPoolExecutor to make it parallel,
         but mind the rate limit of the API.
+        TODO: retriever abstraction
         """
-        outline_tree = process_table_of_contents(outline)
-        outline_tree = list(outline_tree.values())[0]
+        final_article = copy.deepcopy(article_outline)
+        final_article.remove_section_nodes()
 
-        article = []
-        for section_title in outline_tree:
-            logger.info(f"Writing section: {section_title}")
-            retrievals = vector_db.search([section_title], top_k = 10)
-            section_content = self.write_section(topic, section_title, retrievals)
-            article.append(section_content)
+        for section_node in article_outline.get_sections():
+            if section_node.section_name == "Introduction" or \
+                section_node.section_name == "Conclusion":
+                continue
+            logger.info(f"Writing section: {section_node.section_name}")
+            # First, retrieve: article_outline's subsections are used for retrieval
+            section_queries = section_node.get_children_names(include_self = True)
+            retrievals = retriever.query(section_queries, top_k_per_query=5)
 
-        article_md_str = ''
-        for section in article:
-            article_md_str += section
+            # Then, write section
+            section_content = self.write_section(topic, section_node.section_name, retrievals)
+            section_content = self.citation_manager.update_section_content_cite_id(section_content, retrievals)
+            section_content_node = ArticleNode.create_from_markdown(section_content)
 
-        return article, article_md_str
+            final_article.article_title_node.add_child(section_content_node)
 
-class LeadSectionWriter:
+            time.sleep(10) # hack to avoid api model rate limit
+
+        # add references
+        reference_section_node = ArticleNode.create_from_markdown(self.citation_manager.get_article_reference_section())
+        final_article.article_title_node.add_child(reference_section_node)
+
+        return final_article
+
+class LeadSectionWriter(Writer):
     """Write lead section which is the summary of the whole article.
     Lead section should be at the very top the article, even before introduction.
     """
 
     def __init__(self, writer_llm) -> None:
-        self.llm = writer_llm
-    
-    def write(self, topic, draft_article):
+        super().__init__(writer_llm)
+
+    def write(self, draft_article: Article):
         message = [
-            dict(role="user", 
-                 content=WRITE_LEAD_SECTION.format(topic=topic,
-                                                   draft_article=draft_article)),
+            dict(role="user",
+                 content=WRITE_LEAD_SECTION.format(topic=draft_article.topic,
+                                                   draft_article=draft_article.to_string())),
         ]
 
         response = self.llm.chat(message)
 
         return response
 
-class ArticlePolishWriter:
+class ArticlePolishWriter(Writer):
     """Article polishing is removing duplicated paragraph."""
 
-    def __init__(self, writer_engine) -> None:
-        self.llm = writer_engine
+    def __init__(self, writer_llm) -> None:
+        super().__init__(writer_llm)
 
-    def polish(self, draft_article):
+    def write(self, draft_article: Article):
+
         message = [
-            dict(role="user", 
-                 content=POLISH_PAGE.format(draft_article=draft_article)),
+            dict(role="user",
+                 content=POLISH_PAGE.format(draft_article=draft_article.string())),
         ]
 
         response = self.llm.chat(message)

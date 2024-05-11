@@ -2,11 +2,14 @@ from dataclasses import dataclass, field
 from enum import IntEnum
 from typing import List, Optional, Union
 
+from sine.common.logger import logger
+
+
 class ActionStatusCode(IntEnum):
     ING = 1
     SUCCESS = 0
     HTTP_ERROR = -1000  # http error
-    ARGS_ERROR = -1001  # args error 
+    ARGS_ERROR = -1001  # args error
     API_ERROR = -1002  # api error
 
 
