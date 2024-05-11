@@ -10,6 +10,7 @@ from sine.agents.storm.utils import get_wiki_page_title_and_toc
 from sine.common.logger import logger
 from sine.common.utils import is_valid_url
 
+
 class PerspectiveGenerator:
     """PerspectiveGen generates perspectives for the given topic, each
     perspective foucses on important aspects of the given topic."""
@@ -22,17 +23,20 @@ class PerspectiveGenerator:
         message = [
             dict(role="user", content=FIND_RELATED_TOPIC.format(topic=self.topic)),
         ]
+
         try:
-            related_topics = self.llm.chat(message)
-            urls = [s[s.find("http") :] for s in related_topics.split("\n")]
+            # FIXME: relying on llm generate url is not robust
+            resoponse = self.llm.chat(message)
+            urls = re.findall(r'https://[^\s]*', resoponse)
+            if not len(urls):
+                logger.critical("No related topics url parsed, please check the response.")
             urls = [url for url in urls if is_valid_url(url)]
         except BaseException:
             logger.error("Failed to find related topics.")
-            exit()
 
         logger.info(f"Find related topics urls: {urls}")
 
-        return related_topics, urls
+        return urls
 
     def extract_title_and_toc(self, urls):
         examples = []
@@ -47,10 +51,8 @@ class PerspectiveGenerator:
         return examples
 
     def generate(self, max_perspective=5):
-        # TODO: log or save all the generate results
-
         # find related topics (wiki pages), return urls are wiki links
-        related_topics, urls = self.find_related_topics()
+        urls = self.find_related_topics()
 
         # extract content
         info = self.extract_title_and_toc(urls)

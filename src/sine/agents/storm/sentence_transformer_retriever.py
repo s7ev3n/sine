@@ -6,11 +6,12 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 
 class Information:
-    uuid: str
+    def __init__(self, uuid: str) -> None:
+        self.uuid = uuid
 
 class SearchResult(Information):
     def __init__(self, title: str, url: str, snippets: List[str]) -> None:
-        super(Information, self).__init__(uuid=url)
+        super().__init__(uuid=url)
         self.title = title
         self.url = url
         self.snippets = snippets

@@ -8,12 +8,11 @@ from sine.agents.storm.article import Article
 from sine.agents.storm.conversation import Conversation
 from sine.agents.storm.expert import Expert
 from sine.agents.storm.perspectivist import PerspectiveGenerator, Perspectivist
-from sine.agents.storm.sentence_transformer_retriever import \
-    SentenceTransformerRetriever
+from sine.agents.storm.sentence_transformer_retriever import (
+    SearchResult, SentenceTransformerRetriever)
 from sine.agents.storm.utils import load_json, load_txt, save_json, save_txt
 from sine.agents.storm.writer import ArticleWriter, OutlineWriter
 from sine.common.logger import LOGGER_DIR, logger
-from sine.common.schema import SearchResult
 from sine.common.utils import make_dir_if_not_exist
 from sine.models.api_model import APIModel
 
@@ -138,8 +137,8 @@ class STORM:
         article = self.article_writer.write(self.cfg.topic, outline, self.retriever)
 
         # step 4: post process the article
-        self.final_article = article.to_string()
+        self.final_article = article.to_markdown()
         self.state = STORMStatus.STOP
-        save_txt(f"{topic_str}.txt", self.final_article)
+        save_txt(f"{topic_str}.md", self.final_article)
 
         return True

@@ -244,6 +244,10 @@ class Article:
 
         return True
 
+    def to_markdown(self):
+        """Export the whole article to string in markdown format."""
+        return self.root.to_string()
+
     @classmethod
     def create_from_markdown(cls, topic: str, markdown: str):
         """Construct Article instance's markdown format.

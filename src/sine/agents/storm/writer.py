@@ -111,7 +111,7 @@ class ArticleWriter(Writer):
             sub_section_outline (str): the subsection outline string in markdown format (e.g. ##subtitles)
 
         """
-        retrieval_citation_string = self.citation_manager.to_citation_string(section_retrievals)
+        retrieval_citation_string = self.citation_manager.snippets_citation_string(section_retrievals)
 
         message = [
             dict(role='user',
@@ -131,7 +131,7 @@ class ArticleWriter(Writer):
         Args:
             topic     : topic of interest
             outline   : outline of the article, with markdown hash tags,
-                            e.g. #, ## indicating section and subsections etc
+                        e.g. #, ## indicating section and subsections etc
             retriever : search section related info from retriever
 
         TODO: use concurrent.futures.ThreadPoolExecutor to make it parallel,
@@ -149,7 +149,7 @@ class ArticleWriter(Writer):
             retrievals = retriever.query(section_queries, top_k = 10)
             # Then, write section
             section_content = self.write_section(topic, section_node.section_name, retrievals)
-            section_content = self.citation_manager.update_section_citation(section_content, retrievals)
+            section_content = self.citation_manager.update_section_content_cite_id(section_content, retrievals)
             section_content_node = ArticleNode.create_from_markdown(section_content)
             section_node.add_child(section_content_node)
 

@@ -5,7 +5,8 @@ import requests
 
 from sine.actions.base_action import BaseAction, tool_api
 from sine.actions.parser import BaseParser, JsonParser
-from sine.common.schema import ActionReturn, ActionStatusCode, SearchResult
+from sine.agents.storm.sentence_transformer_retriever import SearchResult
+from sine.common.schema import ActionReturn, ActionStatusCode
 
 
 class GoogleSearch(BaseAction):
@@ -119,12 +120,15 @@ class GoogleSearch(BaseAction):
 
         for result in results[self.result_key_for_type[self.search_type]]:
             if "snippet" in result:
-                search_result = SearchResult(
-                    title=result["title"],
-                    url=result["url"],
-                    snippet=result["snippet"],
-                )
-                snippets.append(search_result)
+                try:
+                    search_result = SearchResult(
+                        title=result["title"],
+                        url=result["link"],
+                        snippets=[result["snippet"]],
+                    )
+                    snippets.append(search_result)
+                except Exception as e:
+                    raise ValueError(f"Error parsing search result: {e}")
 
         return snippets
 
