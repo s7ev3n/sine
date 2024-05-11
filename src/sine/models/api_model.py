@@ -14,8 +14,8 @@ AVAILABLE_API_MODELS = {
 def get_api_model(model_name):
     if 'glm' in model_name:
         from zhipuai import ZhipuAI
-        assert model_name in AVAILABLE_API_MODELS['zhipu']
-        client = ZhipuAI(api_key=os.getenv("ZHIPU_API_KEY"))       
+        assert model_name in AVAILABLE_API_MODELS['zhipuai']
+        client = ZhipuAI(api_key=os.getenv("ZHIPU_API_KEY"))
     elif 'moonshot' in model_name:
         from openai import OpenAI
         assert model_name in AVAILABLE_API_MODELS['moonshot']
@@ -25,7 +25,7 @@ def get_api_model(model_name):
         from openai import OpenAI
         assert model_name in AVAILABLE_API_MODELS['deepseek']
         client = OpenAI(api_key=os.getenv("DEEPSEEK_API_KEY"),
-                        base_url="https://api.deepseek.com")     
+                        base_url="https://api.deepseek.com")
     elif model_name in AVAILABLE_API_MODELS['groq']:
         from groq import Groq
         client = Groq(api_key=os.getenv("GROQ_API_KEY"))

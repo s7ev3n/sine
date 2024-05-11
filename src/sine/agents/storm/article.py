@@ -202,23 +202,26 @@ class Article:
     """
 
     def __init__(self, topic_name):
-        self.root = ArticleNode(section_name=topic_name, level=0)
+        self.__root_node = ArticleNode(section_name=topic_name, level=0)
 
     @property
     def topic(self):
-        return self.root.section_name
+        return self.__root_node.section_name
 
-    def get_title_node(self):
-        assert len(self.root.children) > 0, "No article title found."
-        assert len(self.root.children) < 2, f"Found {len(self.root.children)} titles."
+    @property
+    def article_title_node(self):
+        assert len(self.__root_node.children) > 0, "No article title found."
+        assert len(self.__root_node.children) < 2, f"Found {len(self.__root_node.children)} titles."
 
-        return self.root.children[0]
+        return self.__root_node.children[0]
+
+    def add_to_root(self, node):
+        self.__root_node.add_child(node)
 
     def get_sections(self) -> List[str]:
         """Get the section (level 2) names of the article."""
-        title_node = self.get_title_node()
 
-        return [i for i in title_node.children]
+        return [i for i in self.article_title_node.children]
 
     def find_section(self, section_name: str) -> Optional[ArticleNode]:
         """
@@ -231,22 +234,26 @@ class Article:
             reference of the node or None if section name has no match
         """
 
-        return self.root.find_node(section_name)
+        return self.__root_node.find_node(section_name)
 
     def remove_subsection_nodes(self):
         """Clean all the sub(sub)sections, only keeping the sections.
         This is a operation for STORM default section writing step.
         """
-        title_node = self.get_title_node()
-
-        for section_node in title_node.children:
+        for section_node in self.article_title_node.children:
             section_node.children = []
+
+        return True
+
+    def remove_section_nodes(self):
+        """Clean all the sections, only keeping the title."""
+        self.article_title_node.children = []
 
         return True
 
     def to_markdown(self):
         """Export the whole article to string in markdown format."""
-        return self.root.to_string()
+        return self.__root_node.to_string()
 
     @classmethod
     def create_from_markdown(cls, topic: str, markdown: str):
@@ -261,6 +268,6 @@ class Article:
 
         article = cls(topic)
         article_node = ArticleNode.create_from_markdown(markdown)
-        article.root.add_child(article_node)
+        article.add_to_root(article_node)
 
         return article

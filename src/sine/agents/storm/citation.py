@@ -42,6 +42,9 @@ class CitationTable:
         )
         return ref
 
+    def __len__(self):
+        return len(self.references)
+
 class CitationManager:
     '''CitationManger manage CitationTable.'''
 
@@ -52,7 +55,7 @@ class CitationManager:
         snippet_citation_string = ''
         for n, snp in enumerate(retrievals):
             snippet_citation_string += f'[{n + 1}] ' + '\n'.join([snp.snippets_string()])
-            snippet_citation_string += '\n\n'
+            # snippet_citation_string += '\n\n'
 
         return snippet_citation_string
 

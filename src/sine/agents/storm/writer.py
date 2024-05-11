@@ -89,13 +89,6 @@ class ArticleWriter(Writer):
         super().__init__(writer_llm)
         self.citation_manager = CitationManager()
 
-    def _format_snippet(self, snippets):
-        info = ''
-        for n, r in enumerate(snippets):
-            info += f'[{n + 1}] ' + '\n'.join([r])
-            info += '\n\n'
-        return info
-
     def write_section(self, topic, section_title, section_retrievals, sub_section_outline = None):
         """Section writer writes the content of each section based on retrievals and section outline.
 
@@ -139,21 +132,29 @@ class ArticleWriter(Writer):
         TODO: retriever abstraction
         """
         final_article = copy.deepcopy(article_outline)
-        final_article.remove_subsection_nodes()
-        sections_to_write = final_article.get_sections()
-        for section_node in sections_to_write:
+        final_article.remove_section_nodes()
+
+        for section_node in article_outline.get_sections():
+            if section_node.section_name == "Introduction" or \
+                section_node.section_name == "Conclusion":
+                continue
             logger.info(f"Writing section: {section_node.section_name}")
             # First, retrieve: article_outline's subsections are used for retrieval
-            section_node_outline = article_outline.find_section(section_node.section_name)
-            section_queries = section_node_outline.get_children_names(include_self = True)
-            retrievals = retriever.query(section_queries, top_k = 10)
+            section_queries = section_node.get_children_names(include_self = True)
+            retrievals = retriever.query(section_queries, top_k_per_query=5)
+
             # Then, write section
             section_content = self.write_section(topic, section_node.section_name, retrievals)
             section_content = self.citation_manager.update_section_content_cite_id(section_content, retrievals)
             section_content_node = ArticleNode.create_from_markdown(section_content)
-            section_node.add_child(section_content_node)
+
+            final_article.article_title_node.add_child(section_content_node)
 
             time.sleep(10) # hack to avoid api model rate limit
+
+        # add references
+        reference_section_node = ArticleNode.create_from_markdown(self.citation_manager.get_article_reference_section())
+        final_article.article_title_node.add_child(reference_section_node)
 
         return final_article
 

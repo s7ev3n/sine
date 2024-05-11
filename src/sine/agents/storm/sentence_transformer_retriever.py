@@ -9,6 +9,11 @@ class Information:
     def __init__(self, uuid: str) -> None:
         self.uuid = uuid
 
+    def __eq__(self, other):
+        if isinstance(other, Information):
+            return self.uuid == other.uuid
+        return False
+
 class SearchResult(Information):
     def __init__(self, title: str, url: str, snippets: List[str]) -> None:
         super().__init__(uuid=url)
@@ -56,7 +61,7 @@ class SentenceTransformerRetriever:
         self.search_results = search_results
         self.embeddings = self.encoder.encode(snippets)
 
-    def query(self, queries, top_k: int = 5):
+    def query(self, queries, top_k_per_query: int = 5):
         assert len(self.embeddings), "Please encode the text first by calling the `self.encoding`."
 
         retrievals = []
@@ -67,7 +72,8 @@ class SentenceTransformerRetriever:
             query_embedding = self.encoder.encode(query, show_progress_bar=False)
             sim = cosine_similarity([query_embedding], self.embeddings)[0]
             sorted_indices = np.argsort(sim)
-            for i in sorted_indices[-top_k:][::-1]:
-                retrievals.append(self.search_results[i])
+            for i in sorted_indices[-top_k_per_query:][::-1]:
+                if self.search_results[i] not in retrievals:
+                    retrievals.append(self.search_results[i])
 
         return retrievals

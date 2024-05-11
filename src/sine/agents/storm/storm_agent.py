@@ -139,6 +139,8 @@ class STORM:
         # step 4: post process the article
         self.final_article = article.to_markdown()
         self.state = STORMStatus.STOP
-        save_txt(f"{topic_str}.md", self.final_article)
+
+        article_p = os.path.join(storm_save_dir, f"{topic_str}.txt")
+        save_txt(article_p, self.final_article)
 
         return True

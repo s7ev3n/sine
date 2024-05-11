@@ -58,15 +58,18 @@ Write the Wikipedia page outline (Use "#" Title" to indicate section title, "##"
 
 WRITE_SECTION = """Write a Wikipedia section based on the collected information.
 Here is the format of your writing:
-1. Use "#" Title" to indicate section title, "##" Title" to indicate subsection title, "###" Title" to indicate subsubsection title, and so on.
+1. Use "##" Title" to indicate section title, "###" Title" to indicate subsection title, "####" Title" to indicate subsubsection title, and so on.
 2. Use [1], [2], ..., [n] in line (for example, "The capital of the United States is Washington, D.C.[1][3]."). You DO NOT need to include a References or Sources section to list the sources at the end.
-The collected information: {info}
+3. DO NOT put inline citation at the front of the sentence
+4. DO NOT write conclusion or introduction
+
+The collected information: \n{info}
 The topic of the page: {topic}
 The section you need to write: {section_title}
-Write the section with proper inline citations (Start your writing with # section title. Don't include the page tile or try to write other sections):\n
+Write the section with proper inline citations (Start your writing with ## section title. Don't include the page title or try to write other sections):\n
 """
 
-# lead section is In Wikipedia, the lead section is an introduction to an article and a summary of its most important contents. 
+# lead section is In Wikipedia, the lead section is an introduction to an article and a summary of its most important contents.
 # It is located at the beginning of the article, before the table of contents and the first heading
 WRITE_LEAD_SECTION = """Write a lead section for the given Wikipedia page with the following guidelines:
 1. The lead should stand on its own as a concise overview of the article's topic. It should identify the topic, establish context, explain why the topic is notable, and summarize the most important points, including any prominent controversies.
