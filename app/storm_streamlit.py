@@ -92,7 +92,9 @@ def main():
     # run storm agent
     if topic_of_interest != '':
         # init storm agent thread
-        cfg = STORMConfig(topic = topic_of_interest)
+        cfg = STORMConfig(topic = topic_of_interest,
+                          outline_llm="moonshot-v1-32k",
+                          article_llm="moonshot-v1-32k",)
         storm_agent = STORM(cfg)
         storm_agent.init()
         storm_thread = threading.Thread(target=storm_agent.run_storm_pipeline)

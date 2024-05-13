@@ -29,7 +29,7 @@ class CitationTable:
     def to_citation_markdown(self):
         reference_str = '## References'
         for ref in self.references:
-            reference_str += f'\n[{ref.cite_id}]. {ref.title}. {ref.url}.'
+            reference_str += f'\n\n[{ref.cite_id}]. {ref.title}. {ref.url}.'
 
         return reference_str
 
