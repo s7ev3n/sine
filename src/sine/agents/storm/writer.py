@@ -78,7 +78,7 @@ class OutlineWriter(Writer):
         outline_str = clean_up_outline(outline_str)
         logger.info(f"Refined outline (improved by conversation):\n {outline_str}")
 
-        article_outline = Article.create_from_outline_string(topic, outline_str)
+        article_outline = Article.create_from_markdown(topic, outline_str)
 
         return article_outline
 

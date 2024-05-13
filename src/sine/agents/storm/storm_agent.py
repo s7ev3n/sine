@@ -130,7 +130,7 @@ class STORM:
             outline = Article.create_from_markdown(topic=self.cfg.topic, markdown=outline_str)
         else:
             outline = self.outline_writer.write(self.cfg.topic, conversation_history)
-            save_txt(outline_p, outline.to_string())
+            save_txt(outline_p, outline.to_markdown())
 
         # step 3: let us write the article section by section
         self.retriever.encoding(search_results)
