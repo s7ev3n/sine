@@ -11,7 +11,7 @@
 Sine currently has two agents:
 
 - [ReAct](https://react-lm.github.io/): A general agent has reasoning capability.
-- [STORM](https://github.com/stanford-oval/storm): A writer agent which could write wiki style long article.
+- [STORM](https://github.com/stanford-oval/storm): A writer agent which could write wiki style long article. Check [STORM Pipeline](./docs/storm/README_zh-CN.md) for in-depth intro.
 
 ## Get started
 
