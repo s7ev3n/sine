@@ -1,6 +1,6 @@
 # STORM 长文本生成
 
-## STORM 讲解
+## STORM Pipeline
 
 STORM (Synthesis of Topic Outlines through Retrieval and Multi-perspective Question Asking) 是一篇使用LLM生成Wiki风格长文章的研究工作，可点击[github链接](https://github.com/stanford-oval/storm)查看论文和代码仓库。
 
