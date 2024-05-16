@@ -15,7 +15,7 @@ FOCUS_EDU="""I focus on educational aspect of the technology. Given the topic my
 
 FOCUS_COMPARE="""I focus on comparison aspect of the technology. Given the topic my focus is the comparison with other similar technologies."""
 
-FOCUS_FOUNDAMENTAL="""I focus on foundamental aspect of the technology. Given the topic my goal is to have thorough understanding the technology."""
+FOCUS_FOUNDAMENTAL="""I focus on foundamental aspect of the technology. Given the topic my goal is to understand what the technology is."""
 
 PREDEFINED_PERSPECTIVES = [FOCUS_FOUNDAMENTAL, FOCUS_THEORETICAL, FOCUS_ARCHITECT, FOCUS_HISTORICAL, FOCUS_PRACTICAL, FOCUS_BEST_PRACTICE, FOCUS_RESEARCH, FOCUS_EDU, FOCUS_COMPARE]
 

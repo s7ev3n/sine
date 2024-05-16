@@ -58,19 +58,20 @@ class Expert:
         return self.collected_results
 
     def chat_A(self, question_str, search_results=None):
-
+        # answer based on search results snippets
         collected_results_str = ''
         if search_results:
             for result in self.collected_results:
                 collected_results_str += '\n'
                 collected_results_str += result.snippets_string()
 
-        message= dict(
+        message= [dict(
             role="user",
             content=self.protocols["answer_question"].format(
                 question=question_str, context=collected_results_str
-            ))
+            ))]
 
+        response = None
         try:
             response = self.llm.chat(message)
             logger.info(f"Expert answer: {response}")
@@ -79,16 +80,16 @@ class Expert:
 
         return response
 
-    def chat(self, topic, message, max_query=5):
+    def chat(self, topic, message, max_search_query=1):
         if self.mode == "Q->S->A":
             # receive Question to generate serach query, then Search, and finally Answer based on search results.
             queries = self.chat_Q(message)
-            search_results = self.search(queries[:max_query])
+            search_results = self.search(queries[:max_search_query])
             response = self.chat_A(message, search_results)
         elif self.mode == "T->S->A":
             # use Topic to generate search queries, then Search, and finally Answer
             queries = self.chat_T(topic)
-            search_results = self.search(queries[:max_query])
+            search_results = self.search(queries[:max_search_query])
             response = self.chat_A(message, search_results)
         elif self.mode == "Q->A":
             # Direct QA
@@ -96,8 +97,9 @@ class Expert:
         else:
             raise ValueError("Invalid mode.")
 
+        response_msg = dict(role="assistant", content=response)
 
-        return response
+        return response, response_msg
 
 class ExpertOld:
     """Expert use search tools for internet content, and answer perspectivist

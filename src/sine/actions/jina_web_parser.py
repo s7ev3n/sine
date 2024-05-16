@@ -5,7 +5,7 @@ from sine.common.logger import logger
 from sine.common.utils import is_valid_url
 
 
-class JinaWebParse(BaseAction):
+class JinaWebParser(BaseAction):
     '''JinaWebParser parse given web url content into markdown format.'''
     jina_reader_prefix = 'https://r.jina.ai/'
 
