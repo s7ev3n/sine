@@ -10,6 +10,7 @@ class Conversation:
         self.topic = topic
         self.max_turn = max_turn
         self.chat_history = []
+        self.search_results = []
 
     def log(self):
         """Save the conversation history to the log file."""
@@ -30,5 +31,7 @@ class Conversation:
             # expert answer question
             expert_answer, answer_msg = expert.chat(self.topic, writer_question)
             self.chat_history.append(answer_msg)
+
+        self.search_results.extend(expert.collected_results)
 
         return self.chat_history
