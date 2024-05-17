@@ -9,7 +9,7 @@ from sine.agents.storm.perspectivist import Perspectivist
 from sine.agents.storm.prompts_tech import (ANSWER_QUESTION,
                                             GEN_SEARCH_QUERY_ON_QUESION,
                                             PREDEFINED_PERSPECTIVES)
-from sine.agents.storm.sentence_transformer_retriever import (
+from sine.agents.storm.retriever import (
     SearchResult, SentenceTransformerRetriever)
 from sine.agents.storm.storm_agent import STORMConfig, STORMStatus
 from sine.agents.storm.writer import ArticleWriter, OutlineWriter
@@ -100,7 +100,8 @@ class TechStorm:
             save_txt(outline_p, outline.to_markdown())
 
         # step 3: let us write the article section by section
-        self.retriever.encoding(search_results)
+        # encode_content will scrape web page content from search results'url and encode them
+        self.retriever.encoding(search_results, encode_content=True)
         article = self.article_writer.write(self.cfg.topic, outline, self.retriever)
 
         # step 4: post process the article

@@ -25,12 +25,16 @@ class OutlineWriter(Writer):
     """Write draft outline first and then improve based on conversation and
     draft outline."""
 
-    def __init__(self, writer_llm) -> None:
+    def __init__(self, writer_llm, 
+                 draft_outline_protocol,
+                 refine_outline_protocol) -> None:
         super().__init__(writer_llm)
+        self.draft_outline_protocol = draft_outline_protocol
+        self.refine_outline_protocol = refine_outline_protocol
 
     def write_draft_outline(self, topic):
         message = [
-            dict(role="user", content=WRITE_DRAFT_OUTLINE.format(topic=topic)),
+            dict(role="user", content=self.draft_outline_protocol.format(topic=topic)),
         ]
 
         response = self.llm.chat(message)
@@ -44,7 +48,7 @@ class OutlineWriter(Writer):
         for conversations in conversation_history.values():
             for turn in conversations:
                 if turn["role"] == "user":
-                    conversation_str += f"Wikipedia writer: {turn['content']}\n"
+                    conversation_str += f"Writer: {turn['content']}\n"
                 else:
                     conversation_str += f"Expert: {turn['content']}\n"
 
@@ -54,7 +58,7 @@ class OutlineWriter(Writer):
         message = [
             dict(
                 role="user",
-                content=REFINE_OUTLINE.format(
+                content=self.refine_outline_protocol.format(
                     topic=topic, conversation=conversation, draft_outline=draft_outline
                 ),
             ),
@@ -85,8 +89,9 @@ class OutlineWriter(Writer):
 class ArticleWriter(Writer):
     '''ArticleWriter write section by section.'''
 
-    def __init__(self, writer_llm) -> None:
+    def __init__(self, writer_llm, write_section_protocol) -> None:
         super().__init__(writer_llm)
+        self.write_section_protocol = write_section_protocol
         self.citation_manager = CitationManager()
 
     def write_section(self, topic, section_title, section_retrievals, sub_section_outline = None):
@@ -118,7 +123,10 @@ class ArticleWriter(Writer):
 
         return response
 
-    def write(self, topic: str, article_outline: Article, retriever) -> Article:
+    def write_subsection(self, topic, title, prev_content, retriever):
+        pass
+
+    def write(self, topic: str, article_outline: Article, retriever, stick_outline=False) -> Article:
         """ Write the article section by section.
 
         Args:
@@ -126,13 +134,24 @@ class ArticleWriter(Writer):
             outline   : outline of the article, with markdown hash tags,
                         e.g. #, ## indicating section and subsections etc
             retriever : search section related info from retriever
+            stick_outline (bool): By default, only generate section level, 
+                                outline of subsections are used to retrieve
+                                information from previous search results
 
         TODO: use concurrent.futures.ThreadPoolExecutor to make it parallel,
         but mind the rate limit of the API.
-        TODO: retriever abstraction
         """
         final_article = copy.deepcopy(article_outline)
         final_article.remove_section_nodes()
+
+
+        if stick_outline:
+            for section_node in article_outline.get_sections():
+                if section_node.section_name == "Introduction" or \
+                    section_node.section_name == "Conclusion":
+                    continue
+                logger.info(f"Writing section: {section_node.section_name}")
+
 
         for section_node in article_outline.get_sections():
             if section_node.section_name == "Introduction" or \
@@ -140,14 +159,17 @@ class ArticleWriter(Writer):
                 continue
             logger.info(f"Writing section: {section_node.section_name}")
             # First, retrieve: article_outline's subsections are used for retrieval
-            section_queries = section_node.get_children_names(include_self = True)
+            if stick_outline:
+                section_queries = [section_node.section_name]
+            else:
+                section_queries = section_node.get_children_names(include_self = True)
             retrievals = retriever.query(section_queries, top_k_per_query=5)
 
             # Then, write section
             section_content = self.write_section(topic, section_node.section_name, retrievals)
             section_content = self.citation_manager.update_section_content_cite_id(section_content, retrievals)
+            
             section_content_node = ArticleNode.create_from_markdown(section_content)
-
             final_article.article_title_node.add_child(section_content_node)
 
             time.sleep(10) # hack to avoid api model rate limit

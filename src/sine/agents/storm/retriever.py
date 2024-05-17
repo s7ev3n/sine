@@ -5,6 +5,7 @@ from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 from sine.actions.jina_web_parser import JinaWebParser
 from sine.common.logger import logger
+
 class Information:
     def __init__(self, uuid: str) -> None:
         self.uuid = uuid
@@ -15,7 +16,7 @@ class Information:
         return False
 
 class SearchResult(Information):
-    def __init__(self, title: str, url: str, snippets: List[str], content: str = None, scraper=None) -> None:
+    def __init__(self, title: str, url: str, snippets: List[str], content: List[str] = None, scraper=None) -> None:
         super().__init__(uuid=url)
         self.title = title
         self.url = url

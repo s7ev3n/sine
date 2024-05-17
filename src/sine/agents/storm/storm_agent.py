@@ -8,7 +8,7 @@ from sine.agents.storm.article import Article
 from sine.agents.storm.conversation import Conversation
 from sine.agents.storm.expert import Expert
 from sine.agents.storm.perspectivist import PerspectiveGenerator, Perspectivist
-from sine.agents.storm.sentence_transformer_retriever import (
+from sine.agents.storm.retriever import (
     SearchResult, SentenceTransformerRetriever)
 from sine.agents.storm.utils import load_json, load_txt, save_json, save_txt
 from sine.agents.storm.writer import ArticleWriter, OutlineWriter

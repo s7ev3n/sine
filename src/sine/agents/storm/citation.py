@@ -2,8 +2,7 @@ import re
 from dataclasses import dataclass
 from typing import Dict, List, Type
 
-from sine.agents.storm.sentence_transformer_retriever import (Information,
-                                                              SearchResult)
+from sine.agents.storm.retriever import Information, SearchResult
 from sine.common.logger import logger
 
 
@@ -58,6 +57,16 @@ class CitationManager:
             # snippet_citation_string += '\n\n'
 
         return snippet_citation_string
+
+    def content_citation_string(self, retrievals: List[SearchResult]):
+        content_citation_string = ''
+        for n, r in enumerate(retrievals):
+            content_citation_string += '-' * 10
+            content_citation_string += f'[{n + 1}] ' + '\n'.join([r.content])
+        
+        content_citation_string += '-' * 10
+
+        return content_citation_string
 
     def get_cite_id_from_section_content(self, section_content):
         cite_ids = {int(x) for x in re.findall(r'\[(\d+)\]', section_content)}

@@ -28,9 +28,63 @@ Write the most important queries you will use in the following format:
 
 The question you are going to answer is : {question}"""
 
-ANSWER_QUESTION = """You are an expert who can use information effectively. You are chatting with a tech article writer who wants to write a tech article on topic you know.
+ANSWER_QUESTION_TECH = """You are an expert who can use information effectively. You are chatting with a tech article writer who wants to write a tech article on topic you know.
 You have gathered the related information and will now use the information to form a response.
 Make your response as informative as possible and make sure every sentence is supported by the gathered information.
-The quesiont you are discussing about: {question}\n
+The question you are discussing about: {question}\n
 Gathered information:\n{context}
 """
+
+WRITER_STYLE_TECH = """You are a great writer especailly excellent at tech article with the following style:
+1. You keep things simple, clarity, no extra words
+2. You write short sentences for clear understanding for readers
+3. You are very good at writing first sentences which will immediately grab the reader
+KEEP above STYLE when you write article !
+"""
+
+WRITE_DRAFT_OUTLINE_TECH = """Write an outline for a tech article.
+Here is the format of your writing:
+1. Use "#" Title" to indicate section title, "##" Title" to indicate subsection title, "###" Title" to indicate subsubsection title, and so on.
+2. Do not include other information.
+The topic you want to write: {topic}\n
+Write the article outline:\n
+"""
+
+REFINE_OUTLINE_TECH = """Improve an outline for a tech article for the below topic. You already have a draft outline that covers the general information. 
+You also want to improve it based on the information learned from an information-seeking conversation to make it more informative.
+The topic you want to write: "{topic}", and the draft outline:\n {draft_outline}.
+The information-seeking conversation:\n {conversation}
+
+Here is the format of your writing:
+1. Use "#" Title" to indicate section title, "##" Title" to indicate subsection title, "###" Title" to indicate subsubsection title, and so on.
+2. Do not include other information.
+
+Now improve the outline:\n
+"""
+
+WRITE_SECTION_TECH = """Write a section of tech article based on the collected information.
+Here is the format of your writing:
+1. Use "##" Title" to indicate section title, "###" Title" to indicate subsection title, "####" Title" to indicate subsubsection title, and so on.
+2. Use [1], [2], ..., [n] in line (for example, "The capital of the United States is Washington, D.C.[1][3]."). You DO NOT need to include a References or Sources section to list the sources at the end.
+3. DO NOT put inline citation at the front of the sentence
+4. DO NOT write conclusion or introduction
+
+The topic of the tech article is "{topic}", and the section you are going to write is "{section_title}".
+Use below collected information to write the section: \n{info}
+
+Write the section with proper inline citations (Start your writing with ## section title. Don't include the page title or try to write other sections):\n
+"""
+
+WRITE_SUBSECTION_TECH="""Write a subsection content consistent with previous content and grounded on the collected information.
+The topic of the tech article you are writing is "{topic}", and the subsection you are going to write is "{section_title}". 
+Below is previous content before this subsection, you should keep consistent with it: \n{prev_content}
+
+And the collected information below is the source you should use to write the subsection: \n{info}
+Here is the format of your writing:
+1. Use [1], [2], ..., [n] in line (for example, "The capital of the United States is Washington, D.C.[1][3]."). You DO NOT need to include a References or Sources section to list the sources at the end.
+2. DO NOT put inline citation at the front of the sentence
+3. DO NOT write conclusion to end your writing
+
+Write the subsection:\n
+"""
+

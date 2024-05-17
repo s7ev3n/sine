@@ -5,7 +5,7 @@ import requests
 
 from sine.actions.base_action import BaseAction, tool_api
 from sine.actions.parser import BaseParser, JsonParser
-from sine.agents.storm.sentence_transformer_retriever import SearchResult
+from sine.agents.storm.retriever import SearchResult
 from sine.common.schema import ActionReturn, ActionStatusCode
 
 
