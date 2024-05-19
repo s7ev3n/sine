@@ -96,7 +96,7 @@ class JinaWebMarkdownScraper:
 
     def __call__(self, url: str):
         chunks = []
-        status_code, markdown = self.scraper(url)
+        status_code, markdown = self.scraper.run(url)
         if status_code == 200:
             markdown_node = ArticleNode.create_from_markdown(markdown)
             lv2_nodes = markdown_node.children

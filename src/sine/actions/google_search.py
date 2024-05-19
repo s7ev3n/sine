@@ -77,7 +77,7 @@ class GoogleSearch(BaseAction):
             tool_return.state = ActionStatusCode.HTTP_ERROR
         elif status_code == 200:
             parsed_res = self.parse_results(response)
-            tool_return.result = parsed_res
+            tool_return.result = parsed_res[:k]
             tool_return.state = ActionStatusCode.SUCCESS
         else:
             tool_return.errmsg = str(status_code)

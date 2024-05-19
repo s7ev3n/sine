@@ -36,7 +36,6 @@ class STORMConfig:
     saved_outline_path: str = None
     saved_article_path: str = None
     saved_search_results_path: str = None
-    enable_scraper: bool = False # scraper take longer time
 
 
 class STORM:

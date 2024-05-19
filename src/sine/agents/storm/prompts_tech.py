@@ -19,7 +19,7 @@ FOCUS_FOUNDAMENTAL="""I focus on foundamental aspect of the technology. Given th
 
 PREDEFINED_PERSPECTIVES = [FOCUS_FOUNDAMENTAL, FOCUS_THEORETICAL, FOCUS_ARCHITECT, FOCUS_HISTORICAL, FOCUS_PRACTICAL, FOCUS_BEST_PRACTICE, FOCUS_RESEARCH, FOCUS_EDU, FOCUS_COMPARE]
 
-GEN_SEARCH_QUERY_ON_QUESION = """You want to answer the question using Google search. To answer the question, what do you type in the search box?
+GEN_SEARCH_QUERY_TECH = """You want to answer the question using Google search. To answer the question, what do you type in the search box?
 Write the most important queries you will use in the following format:
 - "query 1"
 - "query 2"

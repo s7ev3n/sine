@@ -12,25 +12,22 @@ class Conversation:
         self.chat_history = []
         self.search_results = []
 
-    def log(self):
-        """Save the conversation history to the log file."""
-        # TODO: log the conversation history
-
     def start_conversation(
         self, perspectivist: Type[Perspectivist], expert: Type[Expert]
     ):
         # simulate multi-turn conversation between perspectivist and expert
         for i in range(self.max_turn):
-            logger.info(f"Start the {i} conversation between perspectivist and expert.")
+            logger.info(f"Start the {i+1} conversation between perspectivist and expert.")
             # perspectivist ask question
             writer_question, question_msg = perspectivist.chat(
                 self.topic, self.chat_history
             )
-            self.chat_history.append(question_msg)
-
+            
             # expert answer question
             expert_answer, answer_msg = expert.chat(self.topic, writer_question)
-            self.chat_history.append(answer_msg)
+            if expert_answer:
+                self.chat_history.append(question_msg)
+                self.chat_history.append(answer_msg)
 
         self.search_results.extend(expert.collected_results)
 

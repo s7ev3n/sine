@@ -4,35 +4,37 @@ from typing import Dict
 from sine.actions.google_search import GoogleSearch
 from sine.agents.storm.prompts import ANSWER_QUESTION, GEN_SEARCH_QUERY
 from sine.common.logger import logger
-from sine.common.schema import ActionStatusCode
 
 
 class Expert:
-    def __init__(self, expert_engine, search_engine, protocols: Dict, mode="Q->A"):
+    def __init__(self, 
+                 expert_engine, 
+                 search_engine, 
+                 gen_query_protocol,
+                 answer_question_protocol,
+                 mode="T->S->A"):
         self.llm = expert_engine
         self.search_engine = search_engine
-        self.protocols = protocols
-        self.mode = mode # Q->A, T->S->A, Q->S->A
+        self.gen_query_protocol = gen_query_protocol
+        self.answer_question_protocol = answer_question_protocol
+        self.mode = mode
         self.collected_results = []
 
     def chat_Q(self, question_str):
-        # generate search queries base on question
         message = [dict(role="user",
-                        content=self.protocols["search_query_from_question"].format(question=question_str))]
-        try:
-            response = self.llm.chat(message)
-            matches = re.findall(r'- "(.*)"', response)
-            queries = [match.strip() for match in matches]
-            logger.info(f"Expert generated search queries based on {question_str}:\n{response}")
-        except:
-            logger.warning("Failed to generate search queries.")
-            queries = []
+                        content=self.gen_query_protocol.format(question=question_str))]
+
+        response = self.llm.chat(message)
+        matches = re.findall(r'- "(.*)"', response)
+        queries = [match.strip() for match in matches]
+
+        logger.info(f"Expert generated search queries based on '{question_str}':\n{queries}")
 
         return queries
 
     def chat_T(self, topic):
         # generate search queries base on topic
-        message = [dict(role="user", content=self.protocols["search_query_from_topic"].format(topic=topic))]
+        message = [dict(role="user", content=self.gen_query_protocol.format(topic=topic))]
         try:
             response = self.llm.chat(message)
             logger.info(f"Expert generated search queries based on {topic}:\n{response}")
@@ -48,12 +50,8 @@ class Expert:
     def search(self, queries, top_k: int = 5):
         # search the internet
         for q in queries:
-            try:
-                tool_return = self.search_engine.run(q, top_k)
-                self.collected_results.extend(tool_return.result)
-            except BaseException:
-                logger.warning(f"Failed to search [{q}] from the internet.")
-                continue
+            tool_return = self.search_engine.run(q, top_k)
+            self.collected_results.extend(tool_return.result)
 
         return self.collected_results
 
@@ -63,40 +61,40 @@ class Expert:
         if search_results:
             for result in self.collected_results:
                 collected_results_str += '\n'
-                collected_results_str += result.snippets_string()
+                collected_results_str += result.to_string()
+        else:
+            logger.warning("No search results, directly answer question")
 
         message= [dict(
             role="user",
-            content=self.protocols["answer_question"].format(
+            content=self.answer_question_protocol.format(
                 question=question_str, context=collected_results_str
             ))]
 
-        response = None
-        try:
-            response = self.llm.chat(message)
-            logger.info(f"Expert answer: {response}")
-        except BaseException:
-            logger.warning("Expert failed to chat.")
+        response = self.llm.chat(message)
+        logger.info(f"Expert answer: \n{response}")
 
         return response
 
     def chat(self, topic, message, max_search_query=1):
         if self.mode == "Q->S->A":
-            # receive Question to generate serach query, then Search, and finally Answer based on search results.
+            # receive Question to generate serach query, then Search, 
+            # and finally Answer based on search results.
             queries = self.chat_Q(message)
-            search_results = self.search(queries[:max_search_query])
-            response = self.chat_A(message, search_results)
         elif self.mode == "T->S->A":
             # use Topic to generate search queries, then Search, and finally Answer
             queries = self.chat_T(topic)
-            search_results = self.search(queries[:max_search_query])
-            response = self.chat_A(message, search_results)
-        elif self.mode == "Q->A":
-            # Direct QA
-            response = self.chat_A(topic, message)
         else:
             raise ValueError("Invalid mode.")
+        
+        # if no queries parsed, direct QA
+        if not queries:
+            logger.critical("No search queries")
+            response = self.chat_A(message)
+            return response, dict(role="assistant", content=response)
 
+        search_results = self.search(queries[:max_search_query])
+        response = self.chat_A(message, search_results)
         response_msg = dict(role="assistant", content=response)
 
         return response, response_msg

@@ -7,8 +7,11 @@ from sine.agents.storm.article import Article
 from sine.agents.storm.conversation import Conversation
 from sine.agents.storm.expert import Expert
 from sine.agents.storm.perspectivist import Perspectivist
-from sine.agents.storm.prompts_tech import (ANSWER_QUESTION,
-                                            GEN_SEARCH_QUERY_ON_QUESION,
+from sine.agents.storm.prompts_tech import (ANSWER_QUESTION_TECH,
+                                            GEN_SEARCH_QUERY_TECH,
+                                            WRITE_DRAFT_OUTLINE_TECH,
+                                            REFINE_OUTLINE_TECH,
+                                            WRITE_SECTION_TECH,
                                             PREDEFINED_PERSPECTIVES)
 from sine.agents.storm.retriever import (
     SearchEngineResult, SentenceTransformerRetriever, WebpageContentChunk)
@@ -36,20 +39,27 @@ class TechStorm:
         self.article_llm = APIModel(self.cfg.article_llm)
         logger.info('initialized llms')
 
-        self.outline_writer = OutlineWriter(self.outline_llm)
-        self.article_writer = ArticleWriter(self.article_llm)
+        self.outline_writer = OutlineWriter(
+            writer_llm=self.outline_llm,
+            topic=self.cfg.topic,
+            draft_outline_protocol=WRITE_DRAFT_OUTLINE_TECH,
+            refine_outline_protocol=REFINE_OUTLINE_TECH)
+        self.article_writer = ArticleWriter(
+            writer_llm=self.article_llm,
+            topic=self.cfg.topic,
+            write_section_protocol=WRITE_SECTION_TECH)
         logger.info('initialized writers')
 
         self.retriever = SentenceTransformerRetriever()
 
     def _init_conversation_roles(self):
-        perspectives = PREDEFINED_PERSPECTIVES
+        perspectives = PREDEFINED_PERSPECTIVES[:self.cfg.max_perspectivist]
         perspectivists = [Perspectivist(self.conversation_llm, perspective) for perspective in perspectives]
-        protocols = dict(
-            search_query_from_question=GEN_SEARCH_QUERY_ON_QUESION,
-            answer_question=ANSWER_QUESTION
-        )
-        expert = Expert(self.conversation_llm, GoogleSearch(), protocols, "Q->S->A")
+        expert = Expert(expert_engine=self.conversation_llm, 
+                        search_engine=GoogleSearch(), 
+                        gen_query_protocol=GEN_SEARCH_QUERY_TECH,
+                        answer_question_protocol=ANSWER_QUESTION_TECH,
+                        mode="Q->S->A")
         logger.info(f'initialized {len(perspectivists)} editor agents and expert agent')
 
         return perspectivists, expert
@@ -98,19 +108,19 @@ class TechStorm:
             outline_str = load_txt(outline_p)
             outline = Article.create_from_markdown(topic=self.cfg.topic, markdown=outline_str)
         else:
-            outline = self.outline_writer.write(self.cfg.topic, conversation_history)
+            outline = self.outline_writer.write(conversation_history)
             save_txt(outline_p, outline.to_markdown())
 
         # step 3: let us write the article section by section
         # tech writer use webpage content for writing
         writing_sources = []
         logger.info("scraping webpage content ...")
+        search_results = search_results
         for sr in tqdm(search_results):
             writing_sources.extend(WebpageContentChunk.from_SearchEngineResult(sr))
             time.sleep(2)
         self.retriever.encoding(writing_sources)
-        self.article_writer.set_retriever(self.retriever)
-        article = self.article_writer.write(self.cfg.topic, outline)
+        article = self.article_writer.write(outline, self.retriever, stick_article_outline=True)
 
         # step 4: post process the article
         self.final_article = article.to_markdown()
