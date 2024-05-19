@@ -1,30 +1,36 @@
 from typing import List
-
+from abc import ABC, abstractmethod
 import numpy as np
+import uuid as uuid_generator
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 from sine.actions.jina_web_parser import JinaWebParser
 from sine.common.logger import logger
+from sine.agents.storm.article import ArticleNode
 
-class Information:
-    def __init__(self, uuid: str) -> None:
+class Source(ABC):
+    '''Information abstract class'''
+    def __init__(self, uuid: str, meta: dict = None) -> None:
         self.uuid = uuid
+        self.meta = meta
 
     def __eq__(self, other):
-        if isinstance(other, Information):
+        if isinstance(other, Source):
             return self.uuid == other.uuid
         return False
 
-class SearchResult(Information):
-    def __init__(self, title: str, url: str, snippets: List[str], content: List[str] = None, scraper=None) -> None:
+    @abstractmethod
+    def to_string(self):
+        pass
+
+class SearchEngineResult(Source):
+    def __init__(self, title: str, url: str, snippets: List[str]) -> None:
         super().__init__(uuid=url)
         self.title = title
         self.url = url
         self.snippets = snippets
-        self.content = content
-        self.web_scraper = scraper
 
-    def snippets_string(self) -> str:
+    def to_string(self) -> str:
         snippets_str = ''
         for snpt in self.snippets:
             snippets_str += snpt + '\n'
@@ -32,31 +38,14 @@ class SearchResult(Information):
         return snippets_str
 
     def __repr__(self) -> str:
-        return f"{self.title}\n{self.url}\n{self.snippets_string()}\n"
+        return f"{self.title}\n{self.url}\n{self.to_string()}\n"
 
     def to_dict(self) -> dict:
         return {
             "title" : self.title,
             "url" : self.url,
-            "snippets" : self.snippets,
-            "content" : self.content
+            "snippets" : self.snippets
         }
-
-    def scrape_content(self):
-        """scrape content from url to markdown string"""
-        if self.web_scraper is None:
-            self.web_scraper = JinaWebParser()
-        
-        content = None
-        try:
-            status_code, content = self.web_scraper(self.url)
-            if status_code == 200:
-                self.content = content
-        except:
-            logger.critical(f"Failed to scrape the content from {self.url}")
-
-        return content
-        
 
     @classmethod
     def create_from_dict(cls, data: dict):
@@ -70,27 +59,68 @@ class SearchResult(Information):
             snippets=data["snippets"]
         )
 
+class WebpageContentChunk(Source):
+    def __init__(self, uuid: str, title: str, url: str, content_chunk: str) -> None:
+        super().__init__(uuid)
+        self.title = title
+        self.url = url
+        self.content_chunk = content_chunk 
+
+    def to_string(self):
+        return self.content_chunk
+
+    @classmethod
+    def from_SearchEngineResult(cls, search_engine_result: SearchEngineResult, scraper = None):
+        '''Return list of webpage content chunks'''
+        content_chunks = []
+        if scraper is None:
+            scraper = JinaWebMarkdownScraper()
+        
+        contents = scraper(search_engine_result.url)
+
+        for ct in contents:
+            uuid = uuid_generator.uuid3(uuid_generator.NAMESPACE_URL, ct)
+            chunk = cls(
+                uuid=uuid,
+                title = search_engine_result.title,
+                url = search_engine_result.url,
+                content_chunk = ct
+            )
+            content_chunks.append(chunk)
+
+        return content_chunks
+
+class JinaWebMarkdownScraper:
+    def __init__(self, scraper = JinaWebParser()):
+        self.scraper = scraper
+
+    def __call__(self, url: str):
+        chunks = []
+        status_code, markdown = self.scraper(url)
+        if status_code == 200:
+            markdown_node = ArticleNode.create_from_markdown(markdown)
+            lv2_nodes = markdown_node.children
+            for n in lv2_nodes:
+                chunks.append(n.to_string())
+        
+        return chunks
 
 class SentenceTransformerRetriever:
     '''Navie embedder and retrieval model using sentence transformer.'''
     def __init__(self):
         self.encoder = SentenceTransformer('paraphrase-MiniLM-L6-v2')
 
-    def encoding(self, search_results: List[SearchResult], encode_content=False):
-        if encode_content:
-            logger.info("scraping content from url, it will take longer time ...")
-            data = [sr.scrape_content() for sr in search_results]
-        else:
-            data = [sr.snippets_string() for sr in search_results]
-        
-        self.search_results = search_results
-        self.embeddings = self.encoder.encode(data)
+    def encoding(self, data: List[Source]):
+        datastr_list = [sr.to_string() for sr in data]
+        self.embeddings = self.encoder.encode(datastr_list)
+        self.data_raw = data
 
     def query(self, queries, top_k_per_query: int = 5):
+        """Return semantic closest list of Source."""
         assert len(self.embeddings), "Please encode the text first by calling the `self.encoding`."
 
         retrievals = []
-        if type(queries) is str:
+        if isinstance(queries, str):
             queries = [queries]
 
         for query in queries:
@@ -98,7 +128,7 @@ class SentenceTransformerRetriever:
             sim = cosine_similarity([query_embedding], self.embeddings)[0]
             sorted_indices = np.argsort(sim)
             for i in sorted_indices[-top_k_per_query:][::-1]:
-                if self.search_results[i] not in retrievals:
-                    retrievals.append(self.search_results[i])
+                if self.data_raw[i] not in retrievals:
+                    retrievals.append(self.data_raw[i])
 
         return retrievals

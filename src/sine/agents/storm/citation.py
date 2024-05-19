@@ -2,7 +2,7 @@ import re
 from dataclasses import dataclass
 from typing import Dict, List, Type
 
-from sine.agents.storm.retriever import Information, SearchResult
+from sine.agents.storm.retriever import Source, SearchEngineResult
 from sine.common.logger import logger
 
 
@@ -18,7 +18,7 @@ class CitationTable:
     def __init__(self) -> None:
         self.references = []
 
-    def add_new_reference(self, new_info: Type[Information]):
+    def add_new_reference(self, new_info: Type[Source]):
         cite_id = len(self.references) + 1
         new_reference = self.to_reference(new_info, cite_id)
         self.references.append(new_reference)
@@ -32,11 +32,11 @@ class CitationTable:
 
         return reference_str
 
-    def to_reference(self, search_result: Type[SearchResult], cite_id: int):
+    def to_reference(self, search_result: Type[SearchEngineResult], cite_id: int):
         ref = Reference(
             url=search_result.url,
             title=search_result.title,
-            content=search_result.snippets_string(),
+            content=search_result.to_string(),
             cite_id=cite_id
         )
         return ref
@@ -50,23 +50,13 @@ class CitationManager:
     def __init__(self) -> None:
         self.article_references = CitationTable()
 
-    def snippets_citation_string(self, retrievals: List[SearchResult]):
-        snippet_citation_string = ''
-        for n, snp in enumerate(retrievals):
-            snippet_citation_string += f'[{n + 1}] ' + '\n'.join([snp.snippets_string()])
-            # snippet_citation_string += '\n\n'
-
-        return snippet_citation_string
-
-    def content_citation_string(self, retrievals: List[SearchResult]):
-        content_citation_string = ''
+    def get_citation_string(self, retrievals: List[Source]):
+        citation_string = ''
         for n, r in enumerate(retrievals):
-            content_citation_string += '-' * 10
-            content_citation_string += f'[{n + 1}] ' + '\n'.join([r.content])
-        
-        content_citation_string += '-' * 10
+            citation_string += f'[{n + 1}] ' + '\n'.join([r.to_string()])
+            citation_string += '\n'
 
-        return content_citation_string
+        return citation_string
 
     def get_cite_id_from_section_content(self, section_content):
         cite_ids = {int(x) for x in re.findall(r'\[(\d+)\]', section_content)}

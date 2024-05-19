@@ -9,7 +9,7 @@ from sine.agents.storm.conversation import Conversation
 from sine.agents.storm.expert import Expert
 from sine.agents.storm.perspectivist import PerspectiveGenerator, Perspectivist
 from sine.agents.storm.retriever import (
-    SearchResult, SentenceTransformerRetriever)
+    SearchEngineResult, SentenceTransformerRetriever)
 from sine.agents.storm.utils import load_json, load_txt, save_json, save_txt
 from sine.agents.storm.writer import ArticleWriter, OutlineWriter
 from sine.common.logger import LOGGER_DIR, logger
@@ -36,6 +36,7 @@ class STORMConfig:
     saved_outline_path: str = None
     saved_article_path: str = None
     saved_search_results_path: str = None
+    enable_scraper: bool = False # scraper take longer time
 
 
 class STORM:
@@ -116,7 +117,7 @@ class STORM:
         if os.path.exists(conversation_history_p) and os.path.exists(search_results_p):
             conversation_history = load_json(conversation_history_p)
             search_results_raw = load_json(search_results_p)
-            search_results = [SearchResult.create_from_dict(sr_dict) for sr_dict in search_results_raw]
+            search_results = [SearchEngineResult.create_from_dict(sr_dict) for sr_dict in search_results_raw]
         else:
             conversation_history, search_results = self.run_conversations()
             save_json(conversation_history_p, conversation_history)

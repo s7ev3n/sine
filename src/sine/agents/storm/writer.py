@@ -1,7 +1,7 @@
 import copy
 import time
 from abc import ABC, abstractmethod
-
+from typing import List
 from sine.agents.storm.article import Article, ArticleNode
 from sine.agents.storm.citation import CitationManager
 from sine.agents.storm.prompts import (POLISH_PAGE, REFINE_OUTLINE,
@@ -94,7 +94,20 @@ class ArticleWriter(Writer):
         self.write_section_protocol = write_section_protocol
         self.citation_manager = CitationManager()
 
-    def write_section(self, topic, section_title, section_retrievals, sub_section_outline = None):
+    def _generate_section(self, topic, title, info, prev):
+        message = [
+            dict(role='user',
+                 content=self.write_section_protocol.format(
+                        info=info,
+                        topic=topic,
+                        section_title=title.section_name)),
+        ]
+         
+        response = self.llm.chat(message)
+    
+        return response
+
+    def write_sections_recursive(self, topic, section_node, prev_content=None):
         """Section writer writes the content of each section based on retrievals and section outline.
 
         NOTE: The section writer only writes the first level sections, subsections' titles are used for
@@ -109,32 +122,38 @@ class ArticleWriter(Writer):
             sub_section_outline (str): the subsection outline string in markdown format (e.g. ##subtitles)
 
         """
-        retrieval_citation_string = self.citation_manager.snippets_citation_string(section_retrievals)
+        
+        title = section_node.section_name 
+        logger.info(f"Writing: {'#' * section_node.level} {title}")
+        retrievals = self.retriever.query(section_node.section_name)
+        retrievals_cid = self.citation_manager.get_citation_string(retrievals)
 
-        message = [
-            dict(role='user',
-                 content=WRITE_SECTION.format(
-                     info=retrieval_citation_string,
-                     topic=topic,
-                     section_title=section_title)),
-        ]
+        content = self._generate_section(topic, title, retrievals_cid, prev_content)
+        content = self.citation_manager.update_section_content_cite_id(content, retrievals)
+        section_node = ArticleNode.create_from_markdown(content)
+        
+        # Recursively handle children if there are any
+        for child_node in section_node.children:
+            child_content_node = self.write_section(topic, child_node, section_node.to_string())
+            section_node.add_child(child_content_node)
+        
+        return section_node
 
-        response = self.llm.chat(message)
+    def set_retriever(self, retriever):
+        self.retriever = retriever
 
-        return response
-
-    def write_subsection(self, topic, title, prev_content, retriever):
-        pass
-
-    def write(self, topic: str, article_outline: Article, retriever, stick_outline=False) -> Article:
+    def write(self, 
+              topic: str, 
+              article_outline: Article, 
+              stick_article_outline=False) -> Article:
         """ Write the article section by section.
 
         Args:
             topic     : topic of interest
             outline   : outline of the article, with markdown hash tags,
                         e.g. #, ## indicating section and subsections etc
-            retriever : search section related info from retriever
-            stick_outline (bool): By default, only generate section level, 
+            sources   : list of information for retreiver
+            stick_article_outline : By default, only generate section level, 
                                 outline of subsections are used to retrieve
                                 information from previous search results
 
@@ -144,34 +163,24 @@ class ArticleWriter(Writer):
         final_article = copy.deepcopy(article_outline)
         final_article.remove_section_nodes()
 
-
-        if stick_outline:
-            for section_node in article_outline.get_sections():
-                if section_node.section_name == "Introduction" or \
-                    section_node.section_name == "Conclusion":
-                    continue
-                logger.info(f"Writing section: {section_node.section_name}")
-
-
         for section_node in article_outline.get_sections():
             if section_node.section_name == "Introduction" or \
                 section_node.section_name == "Conclusion":
                 continue
-            logger.info(f"Writing section: {section_node.section_name}")
-            # First, retrieve: article_outline's subsections are used for retrieval
-            if stick_outline:
-                section_queries = [section_node.section_name]
-            else:
-                section_queries = section_node.get_children_names(include_self = True)
-            retrievals = retriever.query(section_queries, top_k_per_query=5)
-
-            # Then, write section
-            section_content = self.write_section(topic, section_node.section_name, retrievals)
-            section_content = self.citation_manager.update_section_content_cite_id(section_content, retrievals)
             
-            section_content_node = ArticleNode.create_from_markdown(section_content)
+            if stick_article_outline:
+                section_content_node = self.write_sections_recursive(topic, section_node)
+            else:
+                logger.info(f"Writing: {'#' * section_node.level} {section_node.section_name}")
+                # article_outline's subsections are used for retrieval
+                section_queries = section_node.get_children_names(include_self = True)
+                retrievals = self.retriever.query(section_queries, top_k_per_query=5)
+                retrievals_cid = self.citation_manager.get_citation_string(retrievals)
+                content = self._generate_section(topic, section_node.section_name, retrievals_cid)
+                content = self.citation_manager.update_section_content_cite_id(content, retrievals)
+                section_node = ArticleNode.create_from_markdown(content)
+            
             final_article.article_title_node.add_child(section_content_node)
-
             time.sleep(10) # hack to avoid api model rate limit
 
         # add references

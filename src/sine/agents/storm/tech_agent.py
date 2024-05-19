@@ -1,6 +1,7 @@
 """Writing tech article agent."""
 import time
 import os
+from tqdm import tqdm
 from sine.actions.google_search import GoogleSearch
 from sine.agents.storm.article import Article
 from sine.agents.storm.conversation import Conversation
@@ -10,7 +11,7 @@ from sine.agents.storm.prompts_tech import (ANSWER_QUESTION,
                                             GEN_SEARCH_QUERY_ON_QUESION,
                                             PREDEFINED_PERSPECTIVES)
 from sine.agents.storm.retriever import (
-    SearchResult, SentenceTransformerRetriever)
+    SearchEngineResult, SentenceTransformerRetriever, WebpageContentChunk)
 from sine.agents.storm.storm_agent import STORMConfig, STORMStatus
 from sine.agents.storm.writer import ArticleWriter, OutlineWriter
 from sine.common.logger import logger, LOGGER_DIR
@@ -75,6 +76,7 @@ class TechStorm:
         topic_str = self.cfg.topic.lower().strip().replace(' ', '_')
         storm_save_dir = os.path.join(LOGGER_DIR, topic_str)
         make_dir_if_not_exist(storm_save_dir)
+
         # step 1: let us explore the topics from different perspectives and
         # gather the information through each perspective and expert (equiped
         # with search tools) conversation
@@ -83,7 +85,7 @@ class TechStorm:
         if os.path.exists(conversation_history_p) and os.path.exists(search_results_p):
             conversation_history = load_json(conversation_history_p)
             search_results_raw = load_json(search_results_p)
-            search_results = [SearchResult.create_from_dict(sr_dict) for sr_dict in search_results_raw]
+            search_results = [SearchEngineResult.create_from_dict(sr_dict) for sr_dict in search_results_raw]
         else:
             conversation_history, search_results = self.run_conversations()
             save_json(conversation_history_p, conversation_history)
@@ -100,9 +102,15 @@ class TechStorm:
             save_txt(outline_p, outline.to_markdown())
 
         # step 3: let us write the article section by section
-        # encode_content will scrape web page content from search results'url and encode them
-        self.retriever.encoding(search_results, encode_content=True)
-        article = self.article_writer.write(self.cfg.topic, outline, self.retriever)
+        # tech writer use webpage content for writing
+        writing_sources = []
+        logger.info("scraping webpage content ...")
+        for sr in tqdm(search_results):
+            writing_sources.extend(WebpageContentChunk.from_SearchEngineResult(sr))
+            time.sleep(2)
+        self.retriever.encoding(writing_sources)
+        self.article_writer.set_retriever(self.retriever)
+        article = self.article_writer.write(self.cfg.topic, outline)
 
         # step 4: post process the article
         self.final_article = article.to_markdown()

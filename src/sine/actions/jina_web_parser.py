@@ -22,6 +22,7 @@ class JinaWebParser(BaseAction):
             jina_url = self.jina_reader_prefix + url
         else:
             logger.error(f"Invalid URL {url}")
+            return -1, ''
 
         try:
             response = requests.get(jina_url, timeout=5)

@@ -84,7 +84,7 @@ class ArticleNode:
         return dfs(self)
 
     def to_string(self):
-        """Export the whole article to string in markdown format."""
+        """Export this node and its all subnodes to string in markdown format."""
 
         node_str = ''
 
@@ -145,13 +145,10 @@ class ArticleNode:
     def create_from_markdown(cls, markdown: str):
         """Create a SectionNode from markdown string."""
 
-        lines = []
-        try:
-            lines = markdown.split('\n')
-            lines = [line.strip() for line in lines if line.strip()]
-        except:
-            logger.error("Error in parsing outline string.")
-            return None
+        assert isinstance(markdown, str), "markdown should be string"
+
+        lines = markdown.split('\n')
+        lines = [line.strip() for line in lines if line.strip()]
 
         node_stack = [] # stack to help find where curent node should be inserted
         i = 0
