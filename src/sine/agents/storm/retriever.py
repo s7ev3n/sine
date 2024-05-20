@@ -8,7 +8,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 from sine.actions.jina_web_parser import JinaWebParser
 from sine.agents.storm.article import ArticleNode
-from sine.agents.storm.utils import chunk_text_spacy, is_markdown
+from sine.agents.storm.utils import chunk_text, is_markdown
 from sine.common.logger import logger
 
 
@@ -110,8 +110,8 @@ class JinaWebMarkdownScraper:
                 for n in lv2_nodes:
                     chunks.append(n.to_string())
             else:
-                logger.info("Use spacy text chunking.")
-                chunks = chunk_text_spacy(markdown)
+                logger.info("Use text chunking.")
+                chunks = chunk_text(markdown)
 
         return chunks
 

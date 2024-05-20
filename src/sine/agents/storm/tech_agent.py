@@ -10,11 +10,13 @@ from sine.agents.storm.conversation import Conversation
 from sine.agents.storm.expert import Expert
 from sine.agents.storm.perspectivist import Perspectivist
 from sine.agents.storm.prompts_tech import (ANSWER_QUESTION_TECH,
+                                            ASK_QUESTION_TECH,
                                             GEN_SEARCH_QUERY_TECH,
                                             PREDEFINED_PERSPECTIVES,
                                             REFINE_OUTLINE_TECH,
                                             WRITE_DRAFT_OUTLINE_TECH,
-                                            WRITE_SECTION_TECH)
+                                            WRITE_SECTION_TECH,
+                                            WRITE_SUBSECTION_TECH)
 from sine.agents.storm.retriever import (SearchEngineResult,
                                          SentenceTransformerRetriever,
                                          WebpageContentChunk)
@@ -52,14 +54,14 @@ class TechStorm:
         self.article_writer = ArticleWriter(
             writer_llm=self.article_llm,
             topic=self.cfg.topic,
-            write_section_protocol=WRITE_SECTION_TECH)
+            write_section_protocol=WRITE_SUBSECTION_TECH)
         logger.info('initialized writers')
 
         self.retriever = SentenceTransformerRetriever()
 
     def _init_conversation_roles(self):
         perspectives = PREDEFINED_PERSPECTIVES[:self.cfg.max_perspectivist]
-        perspectivists = [Perspectivist(self.conversation_llm, perspective) for perspective in perspectives]
+        perspectivists = [Perspectivist(self.conversation_llm, perspective, ASK_QUESTION_TECH) for perspective in perspectives]
         expert = Expert(expert_engine=self.conversation_llm,
                         search_engine=GoogleSearch(),
                         gen_query_protocol=GEN_SEARCH_QUERY_TECH,

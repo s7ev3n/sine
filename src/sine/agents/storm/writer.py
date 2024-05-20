@@ -99,50 +99,19 @@ class ArticleWriter(Writer):
         self.write_section_protocol = write_section_protocol
         self.citation_manager = CitationManager()
 
-    def _generate_section(self, title, info, prev):
+    def _generate_section(self, title, info, prev_content):
         message = [
             dict(role='user',
                  content=self.write_section_protocol.format(
                         info=info,
                         topic=self.topic,
-                        section_title=title)),
+                        section_title=title,
+                        prev_content=prev_content)),
         ]
 
         response = self.llm.chat(message)
 
         return response
-
-    def write_sections_recursive(self, section_node, prev_content=None):
-        """Section writer writes the content of each section based on retrievals and section outline.
-
-        NOTE: The section writer only writes the first level sections, subsections' titles are used for
-        retrieving information from search results, and the subsections generated are not following
-        strictly the generated outline in previous steps. But you could customized to generate following
-        subsection outlines.
-        See the issue for detail reason: `https://github.com/stanford-oval/storm/issues/30`
-
-        Args:
-            topic (str): the topic of this article
-            section_retrievals (List[SearchResult]): the information retrieved from the subsection titles using vector search
-            sub_section_outline (str): the subsection outline string in markdown format (e.g. ##subtitles)
-
-        """
-
-        title = section_node.section_name
-        logger.info(f"Writing: {'#' * section_node.level} {title}")
-        retrievals = self.retriever.query(section_node.section_name)
-        retrievals_cid = self.citation_manager.get_citation_string(retrievals)
-
-        content = self._generate_section(title, retrievals_cid, prev_content)
-        content = self.citation_manager.update_section_content_cite_id(content, retrievals)
-        section_node = ArticleNode.create_from_markdown(content)
-
-        # Recursively handle children if there are any
-        for child_node in section_node.children:
-            child_content_node = self.write_sections_recursive(child_node, section_node.to_string())
-            section_node.add_child(child_content_node)
-
-        return section_node
 
     def set_retriever(self, retriever):
         self.retriever = retriever
@@ -160,10 +129,35 @@ class ArticleWriter(Writer):
                                     outline of subsections are used to retrieve
                                     information from previous search results
 
+        NOTE: The section writer only writes the first level sections, subsections' titles are used for
+        retrieving information from search results, and the subsections generated are not following
+        strictly the generated outline in previous steps. But you could customized to generate following
+        subsection outlines.
+        See the issue for detail reason: `https://github.com/stanford-oval/storm/issues/30`
+
         TODO: use concurrent.futures.ThreadPoolExecutor to make it parallel,
         but mind the rate limit of the API.
         """
         self.retriever = article_retriever
+        
+        def _write_recursive(node, prev_content=None):
+            if node.level > 2:
+                title = node.section_name
+                logger.info(f"Writing: {'#' * node.level} {title}")
+                retrievals = self.retriever.query(node.section_name)
+                retrievals_cid = self.citation_manager.get_citation_string(retrievals)
+
+                content = self._generate_section(title, retrievals_cid, prev_content)
+                content = self.citation_manager.update_section_content_cite_id(content, retrievals)
+                node.content = content
+
+            # Recursively handle children if there are any
+            for child_node in node.children:
+                child_content_node = _write_recursive(child_node, prev_content)
+                prev_content = child_content_node.content
+
+            return node
+
         final_article = copy.deepcopy(article_outline)
         final_article.remove_section_nodes()
 
@@ -173,7 +167,7 @@ class ArticleWriter(Writer):
                 continue
 
             if stick_article_outline:
-                section_content_node = self.write_sections_recursive(section_node, article_retriever)
+                section_content_node = _write_recursive(section_node, article_retriever)
             else:
                 logger.info(f"Writing: {'#' * section_node.level} {section_node.section_name}")
                 # article_outline's subsections are used for retrieval

@@ -2,8 +2,7 @@
 
 import re
 
-from sine.agents.storm.prompts import (ASK_QUESTION,
-                                       DEFAULT_WRITER_PERSPECTIVE,
+from sine.agents.storm.prompts import (DEFAULT_WRITER_PERSPECTIVE,
                                        FIND_RELATED_TOPIC,
                                        GENERATE_WRITERS_PERSPECTIVE)
 from sine.agents.storm.utils import get_wiki_page_title_and_toc
@@ -91,8 +90,9 @@ class Perspectivist:
     """Perspectivist have specific focus on the given topic and chat with
     expert."""
 
-    def __init__(self, perspectivist_engine, perspective):
+    def __init__(self, perspectivist_engine, perspective, ask_question_protocol):
         self.llm = perspectivist_engine
+        self.ask_question_protocol = ask_question_protocol
         self._perspective = perspective
 
     @property
@@ -104,7 +104,7 @@ class Perspectivist:
             chat_history.append(
                 dict(
                     role="user",
-                    content=ASK_QUESTION.format(topic=topic, persona=self.perspective),
+                    content=self.ask_question_protocol.format(topic=topic, persona=self.perspective),
                 )
             )
         try:

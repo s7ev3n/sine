@@ -1,16 +1,13 @@
 import json
 import re
-
 import requests
-import spacy
 from bs4 import BeautifulSoup
 
+from semantic_text_splitter import TextSplitter
 
-def chunk_text_spacy(text):
-    nlp = spacy.load('en_core_web_sm')
-    doc = nlp(text)
-    chunks = [sent.text for sent in doc.sents]
-    return chunks
+def chunk_text(text: str, max_characters: int = 1000):
+    splitter = TextSplitter(max_characters)
+    return splitter.chunks(text)
 
 def is_markdown(text):
     # 检查是否存在一个或多个 # 开头，后面接任意非空白字符的行
