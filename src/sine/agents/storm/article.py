@@ -263,6 +263,9 @@ class Article:
             Article instance
         """
 
+        # FIXME: need to fix article outline levels are different with our pre-defined levels
+        # e.g. # is section instead of title
+
         article = cls(topic)
         article_node = ArticleNode.create_from_markdown(markdown)
         article.add_to_root(article_node)

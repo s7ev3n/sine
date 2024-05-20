@@ -2,8 +2,20 @@ import json
 import re
 
 import requests
+import spacy
 from bs4 import BeautifulSoup
 
+
+def chunk_text_spacy(text):
+    nlp = spacy.load('en_core_web_sm')
+    doc = nlp(text)
+    chunks = [sent.text for sent in doc.sents]
+    return chunks
+
+def is_markdown(text):
+    # 检查是否存在一个或多个 # 开头，后面接任意非空白字符的行
+    pattern = r'^#+\S.*$'
+    return bool(re.search(pattern, text, re.MULTILINE))
 
 def load_json(file_path):
     with open(file_path) as f:

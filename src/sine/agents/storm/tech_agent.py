@@ -1,7 +1,9 @@
 """Writing tech article agent."""
-import time
 import os
+import time
+
 from tqdm import tqdm
+
 from sine.actions.google_search import GoogleSearch
 from sine.agents.storm.article import Article
 from sine.agents.storm.conversation import Conversation
@@ -9,17 +11,20 @@ from sine.agents.storm.expert import Expert
 from sine.agents.storm.perspectivist import Perspectivist
 from sine.agents.storm.prompts_tech import (ANSWER_QUESTION_TECH,
                                             GEN_SEARCH_QUERY_TECH,
-                                            WRITE_DRAFT_OUTLINE_TECH,
+                                            PREDEFINED_PERSPECTIVES,
                                             REFINE_OUTLINE_TECH,
-                                            WRITE_SECTION_TECH,
-                                            PREDEFINED_PERSPECTIVES)
-from sine.agents.storm.retriever import (
-    SearchEngineResult, SentenceTransformerRetriever, WebpageContentChunk)
+                                            WRITE_DRAFT_OUTLINE_TECH,
+                                            WRITE_SECTION_TECH)
+from sine.agents.storm.retriever import (SearchEngineResult,
+                                         SentenceTransformerRetriever,
+                                         WebpageContentChunk)
 from sine.agents.storm.storm_agent import STORMConfig, STORMStatus
 from sine.agents.storm.writer import ArticleWriter, OutlineWriter
-from sine.common.logger import logger, LOGGER_DIR
+from sine.common.logger import LOGGER_DIR, logger
+from sine.common.utils import (load_json, load_txt, make_dir_if_not_exist,
+                               save_json, save_txt)
 from sine.models.api_model import APIModel
-from sine.common.utils import load_json, load_txt, save_json, save_txt, make_dir_if_not_exist
+
 
 class TechStorm:
     def __init__(self, cfg: STORMConfig) -> None:
@@ -55,8 +60,8 @@ class TechStorm:
     def _init_conversation_roles(self):
         perspectives = PREDEFINED_PERSPECTIVES[:self.cfg.max_perspectivist]
         perspectivists = [Perspectivist(self.conversation_llm, perspective) for perspective in perspectives]
-        expert = Expert(expert_engine=self.conversation_llm, 
-                        search_engine=GoogleSearch(), 
+        expert = Expert(expert_engine=self.conversation_llm,
+                        search_engine=GoogleSearch(),
                         gen_query_protocol=GEN_SEARCH_QUERY_TECH,
                         answer_question_protocol=ANSWER_QUESTION_TECH,
                         mode="Q->S->A")
@@ -115,9 +120,9 @@ class TechStorm:
         # tech writer use webpage content for writing
         writing_sources = []
         logger.info("scraping webpage content ...")
-        search_results = search_results
         for sr in tqdm(search_results):
-            writing_sources.extend(WebpageContentChunk.from_SearchEngineResult(sr))
+            source = WebpageContentChunk.from_SearchEngineResult(sr)
+            writing_sources.extend(source)
             time.sleep(2)
         self.retriever.encoding(writing_sources)
         article = self.article_writer.write(outline, self.retriever, stick_article_outline=True)

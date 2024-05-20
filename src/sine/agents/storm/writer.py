@@ -1,7 +1,7 @@
 import copy
 import time
 from abc import ABC, abstractmethod
-from typing import List
+
 from sine.agents.storm.article import Article, ArticleNode
 from sine.agents.storm.citation import CitationManager
 from sine.agents.storm.prompts import (POLISH_PAGE, REFINE_OUTLINE,
@@ -25,8 +25,8 @@ class OutlineWriter(Writer):
     """Write draft outline first and then improve based on conversation and
     draft outline."""
 
-    def __init__(self, 
-                 writer_llm, 
+    def __init__(self,
+                 writer_llm,
                  topic,
                  draft_outline_protocol,
                  refine_outline_protocol) -> None:
@@ -76,6 +76,7 @@ class OutlineWriter(Writer):
 
         # step 2: using converations to refine the directly generated outline
         # format conversation
+        # TODO: the conversation seems very noisy
         conversation = self._format_conversation(chat_history)
         # limit the conversation tokens as the api model has upper limit token per minute
         conversation = limit_word_count_preserve_newline(conversation, max_word_count=3500)
@@ -106,9 +107,9 @@ class ArticleWriter(Writer):
                         topic=self.topic,
                         section_title=title)),
         ]
-         
+
         response = self.llm.chat(message)
-    
+
         return response
 
     def write_sections_recursive(self, section_node, prev_content=None):
@@ -126,8 +127,8 @@ class ArticleWriter(Writer):
             sub_section_outline (str): the subsection outline string in markdown format (e.g. ##subtitles)
 
         """
-        
-        title = section_node.section_name 
+
+        title = section_node.section_name
         logger.info(f"Writing: {'#' * section_node.level} {title}")
         retrievals = self.retriever.query(section_node.section_name)
         retrievals_cid = self.citation_manager.get_citation_string(retrievals)
@@ -135,19 +136,19 @@ class ArticleWriter(Writer):
         content = self._generate_section(title, retrievals_cid, prev_content)
         content = self.citation_manager.update_section_content_cite_id(content, retrievals)
         section_node = ArticleNode.create_from_markdown(content)
-        
+
         # Recursively handle children if there are any
         for child_node in section_node.children:
             child_content_node = self.write_sections_recursive(child_node, section_node.to_string())
             section_node.add_child(child_content_node)
-        
+
         return section_node
 
     def set_retriever(self, retriever):
         self.retriever = retriever
 
-    def write(self, 
-              article_outline: Article, 
+    def write(self,
+              article_outline: Article,
               article_retriever,
               stick_article_outline: bool = False) -> Article:
         """ Write the article section by section.
@@ -155,7 +156,7 @@ class ArticleWriter(Writer):
         Args:
             article_outline       : type: Article, with only outline, no content
             article_retriever     : retreiver which has data encoded
-            stick_article_outline : By default, only generate section level, 
+            stick_article_outline : By default, only generate section level,
                                     outline of subsections are used to retrieve
                                     information from previous search results
 
@@ -170,7 +171,7 @@ class ArticleWriter(Writer):
             if section_node.section_name == "Introduction" or \
                 section_node.section_name == "Conclusion":
                 continue
-            
+
             if stick_article_outline:
                 section_content_node = self.write_sections_recursive(section_node, article_retriever)
             else:
@@ -182,7 +183,7 @@ class ArticleWriter(Writer):
                 content = self._generate_section(section_node.section_name, retrievals_cid)
                 content = self.citation_manager.update_section_content_cite_id(content, retrievals)
                 section_node = ArticleNode.create_from_markdown(content)
-            
+
             final_article.article_title_node.add_child(section_content_node)
             time.sleep(10) # hack to avoid api model rate limit
 

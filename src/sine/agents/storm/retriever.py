@@ -1,12 +1,16 @@
-from typing import List
-from abc import ABC, abstractmethod
-import numpy as np
 import uuid as uuid_generator
+from abc import ABC, abstractmethod
+from typing import List
+
+import numpy as np
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
+
 from sine.actions.jina_web_parser import JinaWebParser
-from sine.common.logger import logger
 from sine.agents.storm.article import ArticleNode
+from sine.agents.storm.utils import chunk_text_spacy, is_markdown
+from sine.common.logger import logger
+
 
 class Source(ABC):
     '''Information abstract class'''
@@ -64,7 +68,7 @@ class WebpageContentChunk(Source):
         super().__init__(uuid)
         self.title = title
         self.url = url
-        self.content_chunk = content_chunk 
+        self.content_chunk = content_chunk
 
     def to_string(self):
         return self.content_chunk
@@ -75,7 +79,7 @@ class WebpageContentChunk(Source):
         content_chunks = []
         if scraper is None:
             scraper = JinaWebMarkdownScraper()
-        
+
         contents = scraper(search_engine_result.url)
 
         for ct in contents:
@@ -90,6 +94,8 @@ class WebpageContentChunk(Source):
 
         return content_chunks
 
+
+
 class JinaWebMarkdownScraper:
     def __init__(self, scraper = JinaWebParser()):
         self.scraper = scraper
@@ -98,11 +104,15 @@ class JinaWebMarkdownScraper:
         chunks = []
         status_code, markdown = self.scraper.run(url)
         if status_code == 200:
-            markdown_node = ArticleNode.create_from_markdown(markdown)
-            lv2_nodes = markdown_node.children
-            for n in lv2_nodes:
-                chunks.append(n.to_string())
-        
+            if is_markdown(markdown):
+                markdown_node = ArticleNode.create_from_markdown(markdown)
+                lv2_nodes = markdown_node.children
+                for n in lv2_nodes:
+                    chunks.append(n.to_string())
+            else:
+                logger.info("Use spacy text chunking.")
+                chunks = chunk_text_spacy(markdown)
+
         return chunks
 
 class SentenceTransformerRetriever:

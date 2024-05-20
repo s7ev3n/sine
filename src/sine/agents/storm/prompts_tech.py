@@ -44,19 +44,19 @@ KEEP above STYLE when you write article !
 
 WRITE_DRAFT_OUTLINE_TECH = """Write an outline for a tech article.
 Here is the format of your writing:
-1. Use "#" Title" to indicate section title, "##" Title" to indicate subsection title, "###" Title" to indicate subsubsection title, and so on.
+1. Use "# title_name" to indicate page title, "##" title_name" to indicate section title, "###" title_name" to indicate subsection title, "####" title_name" to indicate subsubsection title, and so on.
 2. Do not include other information.
 The topic you want to write: {topic}\n
 Write the article outline:\n
 """
 
-REFINE_OUTLINE_TECH = """Improve an outline for a tech article for the below topic. You already have a draft outline that covers the general information. 
+REFINE_OUTLINE_TECH = """Improve an outline for a tech article for the below topic. You already have a draft outline that covers the general information.
 You also want to improve it based on the information learned from an information-seeking conversation to make it more informative.
 The topic you want to write: "{topic}", and the draft outline:\n {draft_outline}.
 The information-seeking conversation:\n {conversation}
 
 Here is the format of your writing:
-1. Use "#" Title" to indicate section title, "##" Title" to indicate subsection title, "###" Title" to indicate subsubsection title, and so on.
+1. Use "# title_name" to indicate page title, "##" title_name" to indicate section title, "###" title_name" to indicate subsection title, "####" title_name" to indicate subsubsection title, and so on.
 2. Do not include other information.
 
 Now improve the outline:\n
@@ -76,7 +76,7 @@ Write the section with proper inline citations (Start your writing with ## secti
 """
 
 WRITE_SUBSECTION_TECH="""Write a subsection content consistent with previous content and grounded on the collected information.
-The topic of the tech article you are writing is "{topic}", and the subsection you are going to write is "{section_title}". 
+The topic of the tech article you are writing is "{topic}", and the subsection you are going to write is "{section_title}".
 Below is previous content before this subsection, you should keep consistent with it: \n{prev_content}
 
 And the collected information below is the source you should use to write the subsection: \n{info}
@@ -87,4 +87,3 @@ Here is the format of your writing:
 
 Write the subsection:\n
 """
-

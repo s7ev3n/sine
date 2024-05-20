@@ -21,6 +21,7 @@ dependencies = [
     "streamlit-shadcn-ui>=0.1.18",
     "python-dotenv>=1.0.1",
     "sentence-transformers>=2.7.0",
+    "spacy>=3.7.4",
 ]
 readme = "README.md"
 requires-python = ">= 3.10"
