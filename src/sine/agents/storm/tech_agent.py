@@ -54,7 +54,7 @@ class TechStorm:
         self.article_writer = ArticleWriter(
             writer_llm=self.article_llm,
             topic=self.cfg.topic,
-            write_section_protocol=WRITE_SUBSECTION_TECH)
+            write_subsection_protocol=WRITE_SUBSECTION_TECH)
         logger.info('initialized writers')
 
         self.retriever = SentenceTransformerRetriever()
@@ -83,7 +83,8 @@ class TechStorm:
             chat_history = conversation.start_conversation(perspectivist, expert)
             conversations[perspectivist.perspective] = chat_history
             search_results.extend(conversation.search_results)
-            time.sleep(10) # hack to avoid api model rate limit
+            # HACK to avoid api model rate limit
+            time.sleep(10)
 
         return conversations, search_results
 
@@ -119,7 +120,7 @@ class TechStorm:
             save_txt(outline_p, outline.to_markdown())
 
         # step 3: let us write the article section by section
-        # tech writer use webpage content for writing
+        # TODO: make chunking nicer
         writing_sources = []
         logger.info("scraping webpage content ...")
         for sr in tqdm(search_results):
