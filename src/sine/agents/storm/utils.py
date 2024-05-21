@@ -3,10 +3,14 @@ import re
 import requests
 from bs4 import BeautifulSoup
 
-from semantic_text_splitter import TextSplitter
+from semantic_text_splitter import TextSplitter, MarkdownSplitter
 
 def chunk_text(text: str, max_characters: int = 1000):
     splitter = TextSplitter(max_characters)
+    return splitter.chunks(text)
+
+def chunk_markdown(text: str, max_characters: int = 1000):
+    splitter = MarkdownSplitter(max_characters)
     return splitter.chunks(text)
 
 def is_markdown(text):

@@ -101,15 +101,15 @@ class Perspectivist:
 
     def chat(self, topic, chat_history):
         if len(chat_history) == 0:
-            chat_history.append(
-                dict(
-                    role="user",
-                    content=self.ask_question_protocol.format(topic=topic, persona=self.perspective),
-                )
+            message_str = self.ask_question_protocol.format(
+                topic=topic, 
+                persona=self.perspective
             )
+            chat_history.append(dict(role="user", content=message_str))
+        
         try:
             response = self.llm.chat(chat_history)
-            logger.info(f"Perspectivist ({self._perspective}) ask: {response}")
+            logger.info(f"Perspectivist ({self._perspective}) ask: '{response}'")
         except BaseException:
             logger.warning("Perspectivist failed.")
             response = ""

@@ -93,7 +93,7 @@ class ArticleNode:
             if node.level:
                 node_str += f"{'#' * node.level} {node.section_name}\n"
             if node.content:
-                node_str += f"{node.content}\n"
+                node_str += f"{node.content}\n\n"
 
             for child in node.children:
                 traverse_tree(child)
@@ -263,7 +263,7 @@ class Article:
             Article instance
         """
 
-        # FIXME: need to fix article outline levels are different with our pre-defined levels
+        # TODO: need to fix article outline levels are different with our pre-defined levels
         # e.g. # is section instead of title
 
         article = cls(topic)

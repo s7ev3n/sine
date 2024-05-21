@@ -1,17 +1,11 @@
-import uuid as uuid_generator
 from abc import ABC, abstractmethod
 from typing import List
-
+import uuid as uuid_generator
 import numpy as np
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
-
-from sine.actions.jina_web_parser import JinaWebParser
-from sine.agents.storm.article import ArticleNode
-from sine.agents.storm.utils import chunk_text, is_markdown
 from sine.common.logger import logger
-
-
+from sine.agents.storm.utils import chunk_markdown, chunk_text, is_markdown
 class Source(ABC):
     '''Information abstract class'''
     def __init__(self, uuid: str, meta: dict = None) -> None:
@@ -63,57 +57,55 @@ class SearchEngineResult(Source):
             snippets=data["snippets"]
         )
 
-class WebpageContentChunk(Source):
-    def __init__(self, uuid: str, title: str, url: str, content_chunk: str) -> None:
+class WebPageContent(Source):
+    def __init__(self, uuid: str, title: str, url: str, content: str) -> None:
         super().__init__(uuid)
         self.title = title
         self.url = url
-        self.content_chunk = content_chunk
+        self.content = content
 
     def to_string(self):
-        return self.content_chunk
+        return self.content
 
     @classmethod
-    def from_SearchEngineResult(cls, search_engine_result: SearchEngineResult, scraper = None):
-        '''Return list of webpage content chunks'''
-        content_chunks = []
-        if scraper is None:
-            scraper = JinaWebMarkdownScraper()
+    def from_search(cls, search_engine_result: SearchEngineResult, web_scraper):
+        '''Scrape web page content'''
 
-        contents = scraper(search_engine_result.url)
-
-        for ct in contents:
-            uuid = uuid_generator.uuid3(uuid_generator.NAMESPACE_URL, ct)
-            chunk = cls(
+        status_code, content = web_scraper.run(search_engine_result.url)
+        if status_code == 200:
+            uuid = uuid_generator.uuid3(uuid_generator.NAMESPACE_URL, content)
+            return cls(
                 uuid=uuid,
                 title = search_engine_result.title,
                 url = search_engine_result.url,
-                content_chunk = ct
+                content = content
             )
-            content_chunks.append(chunk)
 
-        return content_chunks
-
-
-
-class JinaWebMarkdownScraper:
-    def __init__(self, scraper = JinaWebParser()):
-        self.scraper = scraper
-
-    def __call__(self, url: str):
+        logger.warning("web_scraper failed")
+        return None
+    
+    def chunking(self):
+        '''chunking the content, and return list of WebPageContent'''
+        assert self.content is not None, "Please get webpage content first"
         chunks = []
-        status_code, markdown = self.scraper.run(url)
-        if status_code == 200:
-            if is_markdown(markdown):
-                markdown_node = ArticleNode.create_from_markdown(markdown)
-                lv2_nodes = markdown_node.children
-                for n in lv2_nodes:
-                    chunks.append(n.to_string())
-            else:
-                logger.info("Use text chunking.")
-                chunks = chunk_text(markdown)
+        if is_markdown(self.content):
+            chunks.extend(chunk_markdown(self.content))
+        else:
+            chunks.extent(chunk_text(self.content))
 
-        return chunks
+        chunks_webpage = []
+        for c in chunks:
+            uuid = uuid_generator.uuid3(uuid_generator.NAMESPACE_URL, c)
+            chunks_webpage.extend(
+                WebPageContent(
+                    uuid=uuid,
+                    title=self.title,
+                    url=self.url,
+                    content=c
+                )
+            )
+        
+        return chunks_webpage
 
 class SentenceTransformerRetriever:
     '''Navie embedder and retrieval model using sentence transformer.'''

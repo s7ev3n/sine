@@ -3,7 +3,7 @@ import os
 import time
 
 from tqdm import tqdm
-
+from sine.actions.jina_web_parser import JinaWebParser
 from sine.actions.google_search import GoogleSearch
 from sine.agents.storm.article import Article
 from sine.agents.storm.conversation import Conversation
@@ -19,7 +19,7 @@ from sine.agents.storm.prompts_tech import (ANSWER_QUESTION_TECH,
                                             WRITE_SUBSECTION_TECH)
 from sine.agents.storm.retriever import (SearchEngineResult,
                                          SentenceTransformerRetriever,
-                                         WebpageContentChunk)
+                                         WebPageContent)
 from sine.agents.storm.storm_agent import STORMConfig, STORMStatus
 from sine.agents.storm.writer import ArticleWriter, OutlineWriter
 from sine.common.logger import LOGGER_DIR, logger
@@ -77,11 +77,11 @@ class TechStorm:
         # expert retrieve knowledge (currently from google search)
         # search_results is List[SearchResult]
         search_results = []
-        conversations = {}
+        conversations = []
         for perspectivist in perspectivists:
             conversation = Conversation(self.cfg.topic, self.cfg.max_conversation_turn)
-            chat_history = conversation.start_conversation(perspectivist, expert)
-            conversations[perspectivist.perspective] = chat_history
+            _ = conversation.start_conversation(perspectivist, expert)
+            conversations.append(conversation.export())
             search_results.extend(conversation.search_results)
             # HACK to avoid api model rate limit
             time.sleep(10)
@@ -120,13 +120,10 @@ class TechStorm:
             save_txt(outline_p, outline.to_markdown())
 
         # step 3: let us write the article section by section
-        # TODO: make chunking nicer
-        writing_sources = []
         logger.info("scraping webpage content ...")
-        for sr in tqdm(search_results):
-            source = WebpageContentChunk.from_SearchEngineResult(sr)
-            writing_sources.extend(source)
-            time.sleep(2)
+        webpages = [WebPageContent.from_search(sr, JinaWebParser()) for sr in search_results]
+        # chunking
+        writing_sources = [wp.chunking() for wp in webpages]
         self.retriever.encoding(writing_sources)
         article = self.article_writer.write(outline, self.retriever, stick_article_outline=True)
 

@@ -28,5 +28,5 @@ class JinaWebParser(BaseAction):
             response = requests.get(jina_url, timeout=5)
         except Exception as e:
             return -1, str(e)
-
+        # TODO: clean response.text
         return response.status_code, response.text

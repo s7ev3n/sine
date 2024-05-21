@@ -52,7 +52,7 @@ class Expert:
         for q in queries:
             tool_return = self.search_engine.run(q, top_k)
             self.collected_results.extend(tool_return.result)
-
+        logger.debug(f"Expert search results of '[{queries}]': {self.collected_results}")
         return self.collected_results
 
     def chat_A(self, question_str, search_results=None):
