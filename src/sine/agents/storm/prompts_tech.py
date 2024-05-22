@@ -48,7 +48,9 @@ WRITER_STYLE_TECH = """You are a great writer especailly excellent at tech artic
 1. You keep things simple, clarity, no extra words
 2. You write short sentences for clear understanding for readers
 3. You are very good at writing first sentences which will immediately grab the reader
-KEEP above STYLE when you write article !
+4. You writing is pleasant to read and easy to understand
+5. You writing is NOT dry and lifeless
+KEEP above STYLES when you write article !
 """
 
 WRITE_DRAFT_OUTLINE_TECH = """Write an outline for a tech article.
@@ -61,7 +63,10 @@ Write the article outline:\n
 
 REFINE_OUTLINE_TECH = """Improve an outline for a tech article for the below topic. You already have a draft outline that covers the general information.
 You also want to improve it based on the information learned from an information-seeking conversation to make it more informative.
-The topic you want to write: "{topic}", and the draft outline:\n {draft_outline}.
+The topic you want to write: "{topic}"
+
+And the draft outline:\n {draft_outline}
+
 The information-seeking conversation:\n {conversation}
 
 Here is the format of your writing:

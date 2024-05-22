@@ -84,12 +84,19 @@ class ArticleWriter(Writer):
                  writer_llm,
                  topic,
                  write_section_protocol = None,
-                 write_subsection_protocol = None) -> None:
+                 write_subsection_protocol = None,
+                 write_style_protocol = None) -> None:
         super().__init__(writer_llm)
         self.topic = topic
         self.write_section_protocol = write_section_protocol
         self.write_subsection_protocol = write_subsection_protocol
+        self.write_style_protocol = write_style_protocol
         self.citation_manager = CitationManager()
+
+    @property
+    def writer_system_prompt(self):
+        assert self.write_style_protocol is not None, "write_style_protocol is not defined"
+        return dict(role='system', content=self.write_style_protocol)
 
     def _gen_subsection(self, title, info, prev_content):
         assert self.write_subsection_protocol is not None, "write_subsection_protocol is not defined"
@@ -99,7 +106,8 @@ class ArticleWriter(Writer):
             section_title=title,
             prev_content=prev_content)
 
-        return self._gen(message_str)
+        messages = [self.writer_system_prompt, dict(role='user', content=message_str)]
+        return self._gen(messages)
 
     def _gen_section(self, title, info):
         assert self.write_section_protocol is not None, "write_section_protocol is not defined"

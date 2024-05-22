@@ -18,7 +18,8 @@ from sine.agents.storm.prompts_tech import (ANSWER_QUESTION_TECH,
                                             REFINE_OUTLINE_TECH,
                                             WRITE_DRAFT_OUTLINE_TECH,
                                             WRITE_SECTION_TECH,
-                                            WRITE_SUBSECTION_TECH)
+                                            WRITE_SUBSECTION_TECH,
+                                            WRITER_STYLE_TECH)
 from sine.agents.storm.retriever import (SearchEngineResult,
                                          SentenceTransformerRetriever,
                                          WebPageContent)
@@ -56,7 +57,8 @@ class TechStorm:
         self.article_writer = ArticleWriter(
             writer_llm=self.article_llm,
             topic=self.cfg.topic,
-            write_subsection_protocol=WRITE_SUBSECTION_TECH)
+            write_subsection_protocol=WRITE_SUBSECTION_TECH,
+            write_style_protocol=WRITER_STYLE_TECH)
         logger.info('initialized writers')
 
         self.retriever = SentenceTransformerRetriever()
@@ -127,7 +129,7 @@ class TechStorm:
         # chunking
         max_chunk_size = 2000
 
-        writing_sources = list(chain.from_iterable(wp.chunking(max_chunk_size) for wp in webpages))
+        writing_sources = list(chain.from_iterable(wp.chunking(max_chunk_size) for wp in webpages if wp is not None))
         # writing_sources = [* wp.chunking(max_chunk_size) for wp in webpages]
         self.retriever.encoding(writing_sources)
         article = self.article_writer.write(outline, self.retriever, stick_article_outline=True)
