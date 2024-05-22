@@ -1,10 +1,12 @@
 """Writing tech article agent."""
 import os
 import time
+from itertools import chain
 
 from tqdm import tqdm
-from sine.actions.jina_web_parser import JinaWebParser
+
 from sine.actions.google_search import GoogleSearch
+from sine.actions.jina_web_parser import JinaWebParser
 from sine.agents.storm.article import Article
 from sine.agents.storm.conversation import Conversation
 from sine.agents.storm.expert import Expert
@@ -123,7 +125,10 @@ class TechStorm:
         logger.info("scraping webpage content ...")
         webpages = [WebPageContent.from_search(sr, JinaWebParser()) for sr in search_results]
         # chunking
-        writing_sources = [wp.chunking() for wp in webpages]
+        max_chunk_size = 2000
+
+        writing_sources = list(chain.from_iterable(wp.chunking(max_chunk_size) for wp in webpages))
+        # writing_sources = [* wp.chunking(max_chunk_size) for wp in webpages]
         self.retriever.encoding(writing_sources)
         article = self.article_writer.write(outline, self.retriever, stick_article_outline=True)
 

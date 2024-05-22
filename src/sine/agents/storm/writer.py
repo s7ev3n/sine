@@ -123,7 +123,7 @@ class ArticleWriter(Writer):
 
         def _write_recursive(node, retriever, prev_content=None):
             if node.level == 2:
-                logger.info(f"Start: {'#' * node.level} {title}")
+                logger.info(f"Start: {'#' * node.level} {node.section_name}")
             if node.level > 2:
                 title = node.section_name
                 logger.info(f"Writing: {'#' * node.level} {title}")
@@ -131,8 +131,8 @@ class ArticleWriter(Writer):
                 retrievals_cid = self.citation_manager.get_citation_string(retrievals)
 
                 content = self._gen_subsection(title, retrievals_cid, prev_content)
-                # HACK: gen subsection often has title as the first line, remove it
-                content = content.replace(title, '')
+                # gen subsection often has title as the first line, remove it
+                content = _process_content(title, content)
                 content = self.citation_manager.update_section_content_cite_id(content, retrievals)
                 node.content = content
 
@@ -171,6 +171,13 @@ class ArticleWriter(Writer):
         final_article.article_title_node.add_child(reference_section_node)
 
         return final_article
+
+def _process_content(pattern, text):
+    parts = text.split(f"{pattern}", 1)
+    if len(parts) > 1:
+        return parts[1].strip()
+    else:
+        return text
 
 class LeadSectionWriter(Writer):
     """Write lead section which is the summary of the whole article.

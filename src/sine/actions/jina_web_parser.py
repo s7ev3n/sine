@@ -28,5 +28,12 @@ class JinaWebParser(BaseAction):
             response = requests.get(jina_url, timeout=5)
         except Exception as e:
             return -1, str(e)
-        # TODO: clean response.text
-        return response.status_code, response.text
+
+        return response.status_code, _process_markdown_content(response.text)
+
+def _process_markdown_content(text):
+    parts = text.split("Markdown Content:", 1)
+    if len(parts) > 1:
+        return parts[1].strip()
+    else:
+        return text

@@ -1,11 +1,15 @@
+import uuid as uuid_generator
 from abc import ABC, abstractmethod
 from typing import List
-import uuid as uuid_generator
+
 import numpy as np
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
-from sine.common.logger import logger
+
 from sine.agents.storm.utils import chunk_markdown, chunk_text, is_markdown
+from sine.common.logger import logger
+
+
 class Source(ABC):
     '''Information abstract class'''
     def __init__(self, uuid: str, meta: dict = None) -> None:
@@ -83,20 +87,24 @@ class WebPageContent(Source):
 
         logger.warning("web_scraper failed")
         return None
-    
-    def chunking(self):
-        '''chunking the content, and return list of WebPageContent'''
+
+    def chunking(self, max_chunk_size: int = 1000):
+        '''Chunking the content, and return list of WebPageContent.
+
+        Args:
+            max_chunk_size : max characters of chunk size
+        '''
         assert self.content is not None, "Please get webpage content first"
         chunks = []
         if is_markdown(self.content):
-            chunks.extend(chunk_markdown(self.content))
+            chunks.extend(chunk_markdown(self.content, max_chunk_size))
         else:
-            chunks.extent(chunk_text(self.content))
+            chunks.extend(chunk_text(self.content, max_chunk_size))
 
         chunks_webpage = []
         for c in chunks:
             uuid = uuid_generator.uuid3(uuid_generator.NAMESPACE_URL, c)
-            chunks_webpage.extend(
+            chunks_webpage.append(
                 WebPageContent(
                     uuid=uuid,
                     title=self.title,
@@ -104,7 +112,7 @@ class WebPageContent(Source):
                     content=c
                 )
             )
-        
+
         return chunks_webpage
 
 class SentenceTransformerRetriever:
