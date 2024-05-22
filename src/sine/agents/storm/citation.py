@@ -2,7 +2,7 @@ import re
 from dataclasses import dataclass
 from typing import Dict, List, Type
 
-from sine.agents.storm.retriever import Source, SearchEngineResult
+from sine.agents.storm.retriever import SearchEngineResult, Source
 from sine.common.logger import logger
 
 
@@ -28,7 +28,7 @@ class CitationTable:
     def to_citation_markdown(self):
         reference_str = '## References'
         for ref in self.references:
-            reference_str += f'\n\n[{ref.cite_id}]. {ref.title}. {ref.url}.'
+            reference_str += f'\n\n[{ref.cite_id}]. {ref.title}. {ref.url}.\n\n'
 
         return reference_str
 

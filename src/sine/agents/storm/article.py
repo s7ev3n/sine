@@ -91,7 +91,7 @@ class ArticleNode:
         def traverse_tree(node):
             nonlocal node_str
             if node.level:
-                node_str += f"{'#' * node.level} {node.section_name}\n"
+                node_str += f"\n{'#' * node.level} {node.section_name}\n"
             if node.content:
                 node_str += f"{node.content}\n\n"
 
