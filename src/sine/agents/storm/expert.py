@@ -2,7 +2,7 @@ import re
 from typing import Dict
 
 from sine.actions.google_search import GoogleSearch
-from sine.agents.storm.prompts import ANSWER_QUESTION, GEN_SEARCH_QUERY
+from sine.agents.storm.prompts_wiki import ANSWER_QUESTION, GEN_SEARCH_QUERY
 from sine.common.logger import logger
 
 

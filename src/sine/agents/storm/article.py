@@ -93,7 +93,7 @@ class ArticleNode:
             if node.level:
                 node_str += f"\n{'#' * node.level} {node.section_name}\n"
             if node.content:
-                node_str += f"{node.content}\n\n"
+                node_str += f"\n{node.content}\n"
 
             for child in node.children:
                 traverse_tree(child)

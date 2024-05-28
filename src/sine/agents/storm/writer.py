@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 
 from sine.agents.storm.article import Article, ArticleNode
 from sine.agents.storm.citation import CitationManager
-from sine.agents.storm.prompts import POLISH_PAGE, WRITE_LEAD_SECTION
+from sine.agents.storm.prompts_wiki import POLISH_PAGE, WRITE_LEAD_SECTION
 from sine.agents.storm.utils import (clean_up_outline,
                                      limit_word_count_preserve_newline)
 from sine.common.logger import logger

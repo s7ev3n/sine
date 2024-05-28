@@ -2,7 +2,7 @@
 
 import re
 
-from sine.agents.storm.prompts import (DEFAULT_WRITER_PERSPECTIVE,
+from sine.agents.storm.prompts_wiki import (DEFAULT_WRITER_PERSPECTIVE,
                                        FIND_RELATED_TOPIC,
                                        GENERATE_WRITERS_PERSPECTIVE)
 from sine.agents.storm.utils import get_wiki_page_title_and_toc
@@ -14,13 +14,14 @@ class PerspectiveGenerator:
     """PerspectiveGen generates perspectives for the given topic, each
     perspective foucses on important aspects of the given topic."""
 
-    def __init__(self, llm, topic):
+    def __init__(self, llm, gen_wiki_url_protocol, gen_perspectives_protocol):
         self.llm = llm
-        self.topic = topic
+        self.gen_wiki_url_protocol = gen_wiki_url_protocol
+        self.gen_perspectives_protocol = gen_perspectives_protocol
 
-    def find_related_topics(self):
+    def gen_wiki_url(self):
         message = [
-            dict(role="user", content=FIND_RELATED_TOPIC.format(topic=self.topic)),
+            dict(role="user", content=self.gen_wiki_url_protocol.format(topic=self.topic)),
         ]
 
         try:
@@ -49,9 +50,9 @@ class PerspectiveGenerator:
 
         return examples
 
-    def generate(self, max_perspective=5):
+    def gen(self, topic, max_perspective=5):
         # find related topics (wiki pages), return urls are wiki links
-        urls = self.find_related_topics()
+        urls = self.find_related_topics(topic)
 
         # extract content
         info = self.extract_title_and_toc(urls)
@@ -59,15 +60,15 @@ class PerspectiveGenerator:
 
         # generate perspectives
         perspectives = [DEFAULT_WRITER_PERSPECTIVE]
-        perspectives.extend(self._generate_perspectives(info)[:max_perspective])
+        perspectives.extend(self.gen_perspectives(info)[:max_perspective])
 
         logger.info(f"Generated {len(perspectives)} perspectives: {perspectives}")
 
         return perspectives
 
-    def _generate_perspectives(self, info):
+    def gen_perspectives(self, info):
         message = [
-            dict(role="user", content=GENERATE_WRITERS_PERSPECTIVE.format(info=info)),
+            dict(role="user", content=self.gen_perspectives_protocol.format(info=info)),
         ]
 
         try:
