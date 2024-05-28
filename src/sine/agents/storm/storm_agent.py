@@ -84,8 +84,9 @@ class STORM:
     def init(self):
         self.conversation_llm = APIModel(self.cfg.conversation_llm)
         self.question_asker_llm = APIModel(self.cfg.question_asker_llm)
-
         self.article_llm = APIModel(self.cfg.article_llm)
+        logger.info('initialized llms')
+
         self.outline_writer = OutlineWriter(
             writer_llm=self.outline_llm,
             topic=self.cfg.topic,
@@ -97,10 +98,6 @@ class STORM:
             write_section_protocol=self.cfg.write_section_protocol,
             write_subsection_protocol=self.cfg.write_subsection_protocol,
             write_style_protocol=self.cfg.writer_style)
-        logger.info('initialized llms')
-
-        self.outline_writer = OutlineWriter(self.outline_llm)
-        self.article_writer = ArticleWriter(self.article_llm)
         logger.info('initialized writers')
 
         self.retriever = SentenceTransformerRetriever()
