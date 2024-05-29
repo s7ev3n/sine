@@ -5,7 +5,7 @@ import requests
 
 from sine.actions.base_action import BaseAction, tool_api
 from sine.actions.parser import BaseParser, JsonParser
-from sine.agents.storm.sentence_transformer_retriever import SearchResult
+from sine.agents.storm.retriever import SearchEngineResult
 from sine.common.schema import ActionReturn, ActionStatusCode
 
 
@@ -77,14 +77,14 @@ class GoogleSearch(BaseAction):
             tool_return.state = ActionStatusCode.HTTP_ERROR
         elif status_code == 200:
             parsed_res = self.parse_results(response)
-            tool_return.result = parsed_res
+            tool_return.result = parsed_res[:k]
             tool_return.state = ActionStatusCode.SUCCESS
         else:
             tool_return.errmsg = str(status_code)
             tool_return.state = ActionStatusCode.API_ERROR
         return tool_return
 
-    def parse_results(self, results: dict) -> List[SearchResult]:
+    def parse_results(self, results: dict) -> List[SearchEngineResult]:
         """Parse the search results from Serper API.
 
         Args:
@@ -121,7 +121,7 @@ class GoogleSearch(BaseAction):
         for result in results[self.result_key_for_type[self.search_type]]:
             if "snippet" in result:
                 try:
-                    search_result = SearchResult(
+                    search_result = SearchEngineResult(
                         title=result["title"],
                         url=result["link"],
                         snippets=[result["snippet"]],

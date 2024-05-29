@@ -227,6 +227,8 @@ scikit-learn==1.4.2
 scipy==1.13.0
     # via scikit-learn
     # via sentence-transformers
+semantic-text-splitter==0.13.1
+    # via sine
 sentence-transformers==2.7.0
     # via sine
 setuptools==69.2.0

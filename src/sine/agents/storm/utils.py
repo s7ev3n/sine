@@ -1,9 +1,22 @@
 import json
 import re
-
 import requests
 from bs4 import BeautifulSoup
 
+from semantic_text_splitter import TextSplitter, MarkdownSplitter
+
+def chunk_text(text: str, max_characters: int = 1000):
+    splitter = TextSplitter(max_characters)
+    return splitter.chunks(text)
+
+def chunk_markdown(text: str, max_characters: int = 1000):
+    splitter = MarkdownSplitter(max_characters)
+    return splitter.chunks(text)
+
+def is_markdown(text):
+    # 检查是否存在一个或多个 # 开头，后面接任意非空白字符的行
+    pattern = r'^#+\S.*$'
+    return bool(re.search(pattern, text, re.MULTILINE))
 
 def load_json(file_path):
     with open(file_path) as f:

@@ -84,16 +84,16 @@ class ArticleNode:
         return dfs(self)
 
     def to_string(self):
-        """Export the whole article to string in markdown format."""
+        """Export this node and its all subnodes to string in markdown format."""
 
         node_str = ''
 
         def traverse_tree(node):
             nonlocal node_str
             if node.level:
-                node_str += f"{'#' * node.level} {node.section_name}\n"
+                node_str += f"\n{'#' * node.level} {node.section_name}\n"
             if node.content:
-                node_str += f"{node.content}\n"
+                node_str += f"\n{node.content}\n"
 
             for child in node.children:
                 traverse_tree(child)
@@ -145,13 +145,10 @@ class ArticleNode:
     def create_from_markdown(cls, markdown: str):
         """Create a SectionNode from markdown string."""
 
-        lines = []
-        try:
-            lines = markdown.split('\n')
-            lines = [line.strip() for line in lines if line.strip()]
-        except:
-            logger.error("Error in parsing outline string.")
-            return None
+        assert isinstance(markdown, str), "markdown should be string"
+
+        lines = markdown.split('\n')
+        lines = [line.strip() for line in lines if line.strip()]
 
         node_stack = [] # stack to help find where curent node should be inserted
         i = 0
@@ -265,6 +262,9 @@ class Article:
         Returns:
             Article instance
         """
+
+        # TODO: need to fix article outline levels are different with our pre-defined levels
+        # e.g. # is section instead of title
 
         article = cls(topic)
         article_node = ArticleNode.create_from_markdown(markdown)

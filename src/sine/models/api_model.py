@@ -40,6 +40,11 @@ class APIModel:
         self._model_name = model_name
 
     def chat(self, message):
+        if isinstance(message, str):
+            message = [dict(role="user", content=message)]
+        if isinstance(message, dict):
+            message = [message]
+
         response = self.client.chat.completions.create(
             model=self._model_name,
             messages=message,

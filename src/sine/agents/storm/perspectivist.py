@@ -2,10 +2,7 @@
 
 import re
 
-from sine.agents.storm.prompts import (ASK_QUESTION,
-                                       DEFAULT_WRITER_PERSPECTIVE,
-                                       FIND_RELATED_TOPIC,
-                                       GENERATE_WRITERS_PERSPECTIVE)
+from sine.agents.storm.prompts import DEFAULT_WRITER_PERSPECTIVE
 from sine.agents.storm.utils import get_wiki_page_title_and_toc
 from sine.common.logger import logger
 from sine.common.utils import is_valid_url
@@ -15,13 +12,14 @@ class PerspectiveGenerator:
     """PerspectiveGen generates perspectives for the given topic, each
     perspective foucses on important aspects of the given topic."""
 
-    def __init__(self, llm, topic):
+    def __init__(self, llm, gen_wiki_url_protocol, gen_perspectives_protocol):
         self.llm = llm
-        self.topic = topic
+        self.gen_wiki_url_protocol = gen_wiki_url_protocol
+        self.gen_perspectives_protocol = gen_perspectives_protocol
 
-    def find_related_topics(self):
+    def gen_wiki_url(self, topic):
         message = [
-            dict(role="user", content=FIND_RELATED_TOPIC.format(topic=self.topic)),
+            dict(role="user", content=self.gen_wiki_url_protocol.format(topic=topic)),
         ]
 
         try:
@@ -50,9 +48,9 @@ class PerspectiveGenerator:
 
         return examples
 
-    def generate(self, max_perspective=5):
+    def gen(self, topic, max_perspective=5):
         # find related topics (wiki pages), return urls are wiki links
-        urls = self.find_related_topics()
+        urls = self.gen_wiki_url(topic)
 
         # extract content
         info = self.extract_title_and_toc(urls)
@@ -60,15 +58,17 @@ class PerspectiveGenerator:
 
         # generate perspectives
         perspectives = [DEFAULT_WRITER_PERSPECTIVE]
-        perspectives.extend(self._generate_perspectives(info)[:max_perspective])
+        perspectives.extend(self.gen_perspectives(topic, info)[:max_perspective])
 
         logger.info(f"Generated {len(perspectives)} perspectives: {perspectives}")
 
         return perspectives
 
-    def _generate_perspectives(self, info):
+    def gen_perspectives(self, topic, info):
         message = [
-            dict(role="user", content=GENERATE_WRITERS_PERSPECTIVE.format(info=info)),
+            dict(role="user", content=self.gen_perspectives_protocol.format(
+                topic=topic,
+                info=info)),
         ]
 
         try:
@@ -91,8 +91,9 @@ class Perspectivist:
     """Perspectivist have specific focus on the given topic and chat with
     expert."""
 
-    def __init__(self, perspectivist_engine, perspective):
+    def __init__(self, perspectivist_engine, perspective, ask_question_protocol):
         self.llm = perspectivist_engine
+        self.ask_question_protocol = ask_question_protocol
         self._perspective = perspective
 
     @property
@@ -101,15 +102,15 @@ class Perspectivist:
 
     def chat(self, topic, chat_history):
         if len(chat_history) == 0:
-            chat_history.append(
-                dict(
-                    role="user",
-                    content=ASK_QUESTION.format(topic=topic, persona=self.perspective),
-                )
+            message_str = self.ask_question_protocol.format(
+                topic=topic,
+                persona=self.perspective
             )
+            chat_history.append(dict(role="user", content=message_str))
+
         try:
             response = self.llm.chat(chat_history)
-            logger.info(f"Perspectivist ({self._perspective}) ask: {response}")
+            logger.info(f"Perspectivist ({self._perspective}) ask: '{response}'")
         except BaseException:
             logger.warning("Perspectivist failed.")
             response = ""
