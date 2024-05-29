@@ -4,32 +4,29 @@ import time
 from dataclasses import dataclass
 from enum import Enum, unique
 from itertools import chain
+
+from sine.actions.google_search import GoogleSearch
+from sine.actions.jina_web_parser import JinaWebParser
 from sine.agents.storm.article import Article
 from sine.agents.storm.conversation import Conversation
 from sine.agents.storm.expert import Expert
 from sine.agents.storm.perspectivist import PerspectiveGenerator, Perspectivist
-from sine.agents.storm.retriever import (
-    SearchEngineResult, SentenceTransformerRetriever, WebPageContent)
+from sine.agents.storm.prompts import (ANSWER_QUESTION, ASK_QUESTION,
+                                       GEN_SEARCH_QUERY, GEN_WIKI_URL,
+                                       GEN_WRITERS_PERSPECTIVE,
+                                       PREDEFINED_PERSPECTIVES_TECH,
+                                       REFINE_OUTLINE, WRITE_DRAFT_OUTLINE,
+                                       WRITE_SECTION, WRITE_SUBSECTION,
+                                       WRITER_STYLE_TECH)
+from sine.agents.storm.retriever import (SearchEngineResult,
+                                         SentenceTransformerRetriever,
+                                         WebPageContent)
 from sine.agents.storm.utils import load_json, load_txt, save_json, save_txt
 from sine.agents.storm.writer import ArticleWriter, OutlineWriter
 from sine.common.logger import LOGGER_DIR, logger
 from sine.common.utils import make_dir_if_not_exist
 from sine.models.api_model import APIModel
-from sine.actions.jina_web_parser import JinaWebParser
-from sine.agents.storm.prompts import (
-    GEN_WIKI_URL,
-    GEN_WRITERS_PERSPECTIVE,
-    ANSWER_QUESTION,
-    ASK_QUESTION,
-    GEN_SEARCH_QUERY,
-    PREDEFINED_PERSPECTIVES,
-    REFINE_OUTLINE,
-    WRITE_DRAFT_OUTLINE,
-    WRITE_SECTION,
-    WRITE_SUBSECTION,
-    WRITER_STYLE,
 
-)
 
 @unique
 class STORMStatus(str, Enum):
@@ -46,14 +43,16 @@ class STORMConfig:
     expert_mode: str = "T->S->A" # topic -> search -> answer
     expert_gen_query_protocol: str = GEN_SEARCH_QUERY
     expert_answer_question_protocol = ANSWER_QUESTION
-    perspectives_generator_protocol: str = GEN_WRITERS_PERSPECTIVE
     gen_wiki_url_protocol = GEN_WIKI_URL
+    generate_perspectives: bool = True # if false will use predefined perspectives
+    predefined_perspectives = PREDEFINED_PERSPECTIVES_TECH
+    perspectives_generator_protocol: str = GEN_WRITERS_PERSPECTIVE
     perspectivist_ask_question_protocol = ASK_QUESTION
     draft_outline_protocol: str = WRITE_DRAFT_OUTLINE
     refine_outline_protocol: str = REFINE_OUTLINE
     write_section_protocol: str = WRITE_SECTION
     write_subsection_protocol: str = WRITE_SUBSECTION
-    writer_style: str =WRITER_STYLE
+    writer_style: str = WRITER_STYLE_TECH
     max_chunk_size: int = 2000
     max_perspectivist: int = 8
     max_conversation_turn: int = 4
@@ -71,7 +70,7 @@ class STORMConfig:
 class STORM:
     def __init__(self, cfg: STORMConfig) -> None:
         self.cfg = cfg
-        self.state = STORMStatus.STANDBY
+        self.state = STORMStatus.READY
         self.final_article = Article(self.cfg.topic)
         log_str = f"STORM config:\ntopic: {self.cfg.topic}\nmax_perspectivist: {self.cfg.max_perspectivist}" + \
                 f"\nmax_conversation_turn: {self.cfg.max_conversation_turn}" + \
@@ -85,6 +84,7 @@ class STORM:
         self.conversation_llm = APIModel(self.cfg.conversation_llm)
         self.question_asker_llm = APIModel(self.cfg.question_asker_llm)
         self.article_llm = APIModel(self.cfg.article_llm)
+        self.outline_llm = APIModel(self.cfg.outline_llm)
         logger.info('initialized llms')
 
         self.outline_writer = OutlineWriter(
@@ -101,21 +101,26 @@ class STORM:
         logger.info('initialized writers')
 
         self.retriever = SentenceTransformerRetriever()
-        if self.cfg.perspectives_generator is not None:
+        if self.cfg.perspectives_generator_protocol is not None:
             self.perspectives_generator = PerspectiveGenerator(
-                self.conversation_llm, 
+                self.conversation_llm,
                 gen_wiki_url_protocol=self.cfg.gen_wiki_url_protocol,
                 gen_perspectives_protocol=self.cfg.perspectives_generator_protocol)
-        
+
         self.state = STORMStatus.READY
 
     def _init_conversation_roles(self):
-        if hasattr(self, 'perspectives_generator'):
-            perspectives = self.perspectives_generator.generate(max_perspective=self.cfg.max_perspectivist)
+        if self.cfg.generate_perspectives:
+            perspectives = self.perspectives_generator.gen(topic=self.cfg.topic,
+                                                           max_perspective=self.cfg.max_perspectivist)
         else:
-            perspectives = PREDEFINED_PERSPECTIVES[:self.cfg.max_perspectivist]
-        perspectivists = [Perspectivist(self.conversation_llm, perspective) for perspective in perspectives]
-        expert = Expert(self.conversation_llm)
+            perspectives = self.cfg.predefined_perspectives[:self.cfg.max_perspectivist]
+        perspectivists = [Perspectivist(self.conversation_llm, perspective, self.cfg.perspectivist_ask_question_protocol) for perspective in perspectives]
+        expert = Expert(expert_engine=self.conversation_llm,
+                        search_engine=GoogleSearch(),
+                        gen_query_protocol=self.cfg.expert_gen_query_protocol,
+                        answer_question_protocol=self.cfg.expert_answer_question_protocol,
+                        mode=self.cfg.expert_mode)
         logger.info(f'initialized {len(perspectivists)} editor agents and expert agent')
 
         return perspectivists, expert
@@ -132,7 +137,7 @@ class STORM:
             _ = conversation.start_conversation(perspectivist, expert)
             conversations.append(conversation.export())
             search_results.extend(conversation.search_results)
-            
+
             time.sleep(self.cfg.hack_sleep)
 
         return conversations, search_results

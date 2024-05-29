@@ -4,7 +4,8 @@ Please only list the urls in separate lines.
 The topic of interest is {topic}.
 """
 
-GEN_WRITERS_PERSPECTIVE = """You need to select a group of editors who will work together to create a comprehensive article on the topic. Each of them represents a different perspective, role, or affiliation related to this topic. You can use other pages of related topics for inspiration. For each editor, add description of what they will focus on.
+GEN_WRITERS_PERSPECTIVE = """You need to select a group of editors who will work together to create a comprehensive article on the topic. The topic is '{topic}'.
+Each of them represents a different perspective, role, or affiliation related to this topic. You can use other pages of related topics for inspiration. For each editor, add description of what they will focus on.
 Give your answer in the following format: 1. short summary of editor 1: description\n2. short summary of editor 2: description\n...
 
 Article outlines of related topics for inspiration: {info}
@@ -28,7 +29,7 @@ Write the queries you will use in the following format:
 ...
 - "query n"
 
-The question you are going to answer is : {question}
+The question you are going to answer is : {context}
 """
 
 ANSWER_QUESTION = """You are an expert who can use information effectively. You are chatting with an article writer who wants to write on topic you know.
@@ -74,7 +75,7 @@ Use below collected information to write the section: \n{info}
 Write the section with proper inline citations (Start your writing with ## section title. Don't include the page title or try to write other sections):\n
 """
 
-WRITE_SUBSECTION_TECH="""Write a subsection content consistent with previous content and grounded on the collected information.
+WRITE_SUBSECTION = """Write a subsection content consistent with previous content and grounded on the collected information.
 The topic of the article you are writing is "{topic}", and the subsection you are going to write is "{section_title}".
 If provided in the quotation mark, that is previous content before this subsection, you should keep consistent with it, if not provided just write. '\n{prev_content}'
 
