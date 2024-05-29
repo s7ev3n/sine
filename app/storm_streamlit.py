@@ -97,7 +97,7 @@ def main():
                           article_llm="moonshot-v1-32k",)
         storm_agent = STORM(cfg)
         storm_agent.init()
-        storm_thread = threading.Thread(target=storm_agent.run_storm_pipeline)
+        storm_thread = threading.Thread(target=storm_agent.run_pipeline)
 
         # init log thread
         disp_log = DisplayLogs()
