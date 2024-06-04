@@ -66,31 +66,72 @@ def article_ui(topic_of_interest, article_md_str):
     with st.expander(f"{topic_of_interest}"):
         st.markdown(article_md_str)
 
+def get_user_preference_by_chat():
+    from sine.models.api_model import APIModel
+    from sine.agents.storm.prompts import GATHER_PREFERENCE
+    model_name = "llama3-70b-8192"
+    client = APIModel(model_name)
+
+    # Initialize chat history
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+
+    # Display chat messages from history on app rerun
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    if prompt := st.chat_input("Hi, what do you want to learn about ?"):
+        st.session_state.messages.append({"role":"system", "content": GATHER_PREFERENCE})
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
+
+        with st.chat_message("assistant"):
+            response = client.chat(message=[
+                {"role": m["role"], "content": m["content"]}
+                for m in st.session_state.messages
+            ])
+            response = st.write(response)
+        st.session_state.messages.append({"role": "assistant", "content": response})
+    
+    
+    # TODO: parse the user preference json
+    user_pref={
+    'topic': 'async in python',
+    'preference': 'The user has an intermediate to advanced level of experience, has developed AI algorithms, but has little knowledge about web development, wants to use async in projects, specifically with an AI agent that uses API services and requires web requests, and wants to understand both the theoretical concepts and practical applications.'
+    }
+
+    return user_pref
+
+
 def main():
     st.markdown("""
                 <div style="text-align: center;">
                     <h3>Sine: AI agent that help you learn about any topic <b>in-depth</b>.</h3>
                 </div>
                 """, unsafe_allow_html=True)
-
-    topic_of_interest = ''
-
-    with ui.card(key="topic_input"):
-        ui.element("span", children=["What is on your mind ?"], className="flex justify-center text-black-400 text-lg font-medium m-3", key="label1")
-        ui.element("input", key="topic", type='text', placeholder="Tell me your topic of interest")
-
-    clicked = ui.button("Submit", key="clk_btn", className="text-align-center bg-blue-500 text-white")
-
-
-    if clicked:
-        topic_input_value = st.session_state["topic_input"]
-        if topic_input_value is None:
-            st.error("Please enter a topic of interest")
-        topic_of_interest = topic_input_value
+    
+    user_pref = get_user_preference_by_chat()
+    topic_of_interest, preference = None, None
+    if user_pref:
+        topic_of_interest = user_pref['topic']
+        preference = user_pref['preference']
+        st.write("below is your info, confirmed ?")
+        st.write(topic_of_interest)
+        st.write(preference)
+    else:
+        st.error("Please enter a topic of interest")
 
 
-    # run storm agent
-    if topic_of_interest != '':
+    # with ui.card(key="topic_input"):
+    #     ui.element("span", children=["What is on your mind ?"], className="flex justify-center text-black-400 text-lg font-medium m-3", key="label1")
+    #     ui.element("input", key="topic", type='text', placeholder="Tell me your topic of interest")
+
+    clicked = ui.button("Confirm", key="clk_btn", className="text-align-center bg-blue-500 text-white")
+    
+    if clicked and preference and topic_of_interest:
+        st.markdown("Now let us begin")
         # init storm agent thread
         cfg = STORMConfig(topic = topic_of_interest,
                           outline_llm="moonshot-v1-32k",
