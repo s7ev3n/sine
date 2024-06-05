@@ -4,11 +4,10 @@ Please only list the urls in separate lines.
 The topic of interest is {topic}.
 """
 
-GEN_WRITERS_PERSPECTIVE = """You need to select a group of editors who will work together to create a comprehensive article on the topic. The topic is '{topic}'.
-Each of them represents a different perspective, role, or affiliation related to this topic. You can use other pages of related topics for inspiration. For each editor, add description of what they will focus on.
+GEN_WRITERS_PERSPECTIVE = """You need to select a group of experts who will work together to prepare content on the topic for TARGETED reader. The topic is '{topic}'. \n
+Your choice of experts should reflect and focus on the reader's preference, but also be the self-contained on the content. The reader's perference is '{preference}'. \n
+Each of them represents a different perspective and role related to this topic. For each expert, add description of what they will focus on.
 Give your answer in the following format: 1. short summary of editor 1: description\n2. short summary of editor 2: description\n...
-
-Article outlines of related topics for inspiration: {info}
 """
 
 DEFAULT_WRITER_PERSPECTIVE = """Basic fact writer: Basic fact writer focusing on broadly covering the basic facts about the topic."""
@@ -39,23 +38,29 @@ The question you are discussing about: {question}\n
 Gathered information:\n{info}
 """
 
-WRITE_DRAFT_OUTLINE = """Write an outline for an article.
+WRITE_DRAFT_OUTLINE = """Write an outline for an article, the outline should focus on reader's preference.
+The topic you want to write: '{topic}' \n
+And most importantly the reader's preference: '{preference}' \n
+
 Here is the format of your writing:
 1. Use "# title_name" to indicate page title, "##" title_name" to indicate section title, "###" title_name" to indicate subsection title, "####" title_name" to indicate subsubsection title, and so on.
 2. Do not include other information.
-The topic you want to write: {topic}\n
+
 Write the article outline:\n
 """
 
-REFINE_OUTLINE = """Improve an outline for an article for the below topic. You already have a draft outline that covers the general information.
-You also want to improve it based on the information learned from an information-seeking conversation to make it more informative.
-The topic you want to write: "{topic}"
+REFINE_OUTLINE = """Improve an outline for an article based on draft outline and information-seeking conversation, 
+but keep in mind that the goal of the outline is for reader's deep dive into this topic, therefore the outline should focus on the reader's preference. 
+The reader's preference is '{preference}'.
 
-And the draft outline:\n {draft_outline}
+The topic is '{topic}'. And below are draft outline and information-seeking conversation for you to improve the outline,
+use the information wisely and learn from them to make the outline more informative.
+
+The draft outline:\n {draft_outline}
 
 The information-seeking conversation:\n {conversation}
 
-Here is the format of your writing:
+At last is the format of your writing:
 1. Use "# title_name" to indicate page title, "##" title_name" to indicate section title, "###" title_name" to indicate subsection title, "####" title_name" to indicate subsubsection title, and so on.
 2. Do not include other information.
 
@@ -116,21 +121,21 @@ WRITER_STYLE_TECH = """You are a great writer especailly excellent at tech artic
 KEEP above STYLES when you write article !
 """
 
-GATHER_PREFERENCE="""You are an article writer/teacher and is preparing writing content on a topic given by user.
-You are going to have conversations with the user, use your words to figure out the topic and most importantly what content is
-best for the user. To write the best content, you should know your user very well, for example, you need to know how the user's 
-related prior knowledge in order to fully understand this topic, the user's preference/objective of learning a topic, e.g. focusing 
+GATHER_PREFERENCE="""You are an article writer/teacher and is preparing writing content on a topic given by reader.
+You are going to have conversations with the reader, use your words to figure out the topic and most importantly what content is
+best for the reader. To write the best content, you should know your reader very well, for example, you need to know how the reader's 
+related prior knowledge in order to fully understand this topic, the reader's preference/objective of learning a topic, e.g. focusing 
 on practical coding in projects or learning theory or get an overview. You could ask more questions beyond the examples, but no
-more than 10 questions. Remember you goal is to understand your user very well to write content for the user.
+more than 10 questions. Remember you goal is to understand your reader very well to write content for the reader.
 
-You can NOT throw many questions to user all at once, gather the information ONE by ONE. 
+You can NOT throw many questions to reader all at once, gather the information ONE by ONE. 
 
-If you think you have found out the answers of the topic and the user's preference, say "Thanks !" to end the conversation.
+If you think you have found out the answers of the topic and the reader's preference, say "Thanks !" to end the conversation.
 AND output a json object following below format:
 ```json
 {
-    'topic': the topic user would like to learn,
-    'preference': summary all the information you know about the user in a sentence, the more detail the better
+    'topic': the topic reader would like to learn,
+    'preference': summary all the information you know about the reader in a sentence, the more detail the better
 }
 ```
 """
