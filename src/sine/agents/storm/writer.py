@@ -32,21 +32,24 @@ class OutlineWriter(Writer):
     def __init__(self,
                  writer_llm,
                  topic,
+                 preference,
                  draft_outline_protocol,
                  refine_outline_protocol) -> None:
         super().__init__(writer_llm)
         self.topic = topic
+        self.preference = preference
         self.draft_outline_protocol = draft_outline_protocol
         self.refine_outline_protocol = refine_outline_protocol
 
     def write_draft_outline(self):
-        message_str = self.draft_outline_protocol.format(topic=self.topic)
+        message_str = self.draft_outline_protocol.format(topic=self.topic, preference=self.preference)
         response = self._gen(message_str)
 
         return clean_up_outline(response)
 
     def refine_outline(self, draft_outline, conversations):
         message_str = self.refine_outline_protocol.format(
+                    preference=self.preference,
                     topic=self.topic,
                     conversation=''.join(conversations),
                     draft_outline=draft_outline
@@ -83,11 +86,13 @@ class ArticleWriter(Writer):
     def __init__(self,
                  writer_llm,
                  topic,
+                 preference,
                  write_section_protocol = None,
                  write_subsection_protocol = None,
                  write_style_protocol = None) -> None:
         super().__init__(writer_llm)
         self.topic = topic
+        self.preference = preference
         self.write_section_protocol = write_section_protocol
         self.write_subsection_protocol = write_subsection_protocol
         self.write_style_protocol = write_style_protocol

@@ -67,8 +67,8 @@ def article_ui(topic_of_interest, article_md_str):
         st.markdown(article_md_str)
 
 def get_user_preference_by_chat():
-    from sine.models.api_model import APIModel
     from sine.agents.storm.prompts import GATHER_PREFERENCE
+    from sine.models.api_model import APIModel
     model_name = "llama3-70b-8192"
     client = APIModel(model_name)
 
@@ -94,11 +94,11 @@ def get_user_preference_by_chat():
             ])
             response = st.write(response)
         st.session_state.messages.append({"role": "assistant", "content": response})
-    
-    
+
+
     # TODO: parse the user preference json
     user_pref={
-    'topic': 'async in python',
+    'topic': 'i would like to learn async in python',
     'preference': 'The user has an intermediate to advanced level of experience, has developed AI algorithms, but has little knowledge about web development, wants to use async in projects, specifically with an AI agent that uses API services and requires web requests, and wants to understand both the theoretical concepts and practical applications.'
     }
 
@@ -111,7 +111,7 @@ def main():
                     <h3>Sine: AI agent that help you learn about any topic <b>in-depth</b>.</h3>
                 </div>
                 """, unsafe_allow_html=True)
-    
+
     user_pref = get_user_preference_by_chat()
     topic_of_interest, preference = None, None
     if user_pref:
@@ -129,11 +129,12 @@ def main():
     #     ui.element("input", key="topic", type='text', placeholder="Tell me your topic of interest")
 
     clicked = ui.button("Confirm", key="clk_btn", className="text-align-center bg-blue-500 text-white")
-    
+
     if clicked and preference and topic_of_interest:
         st.markdown("Now let us begin")
         # init storm agent thread
         cfg = STORMConfig(topic = topic_of_interest,
+                          user_preference= preference,
                           outline_llm="moonshot-v1-32k",
                           article_llm="moonshot-v1-32k",)
         storm_agent = STORM(cfg)
