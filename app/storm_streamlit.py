@@ -1,6 +1,7 @@
 import threading
 import time
-
+import json
+import re
 import streamlit as st
 import streamlit_shadcn_ui as ui
 from dotenv import load_dotenv
@@ -75,6 +76,7 @@ def get_user_preference_by_chat():
     # Initialize chat history
     if "messages" not in st.session_state:
         st.session_state.messages = []
+        st.session_state.messages.append({"role":"system", "content": GATHER_PREFERENCE})
 
     # Display chat messages from history on app rerun
     for message in st.session_state.messages:
@@ -82,7 +84,6 @@ def get_user_preference_by_chat():
             st.markdown(message["content"])
 
     if prompt := st.chat_input("Hi, what do you want to learn about ?"):
-        st.session_state.messages.append({"role":"system", "content": GATHER_PREFERENCE})
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
@@ -92,18 +93,32 @@ def get_user_preference_by_chat():
                 {"role": m["role"], "content": m["content"]}
                 for m in st.session_state.messages
             ])
-            response = st.write(response)
-        st.session_state.messages.append({"role": "assistant", "content": response})
+            st.write(response)
+            st.session_state.messages.append({"role": "assistant", "content": response})
+        
+        user_pref = find_user_preference_json(response)
+        if user_pref:
+            return user_pref
+    
+    if len(st.session_state.messages) >= 25:
+        logger.critical("Too long conversation, end it")
+        return None
 
+def find_user_preference_json(response):
+    if "Thanks" in response and "{" in response and "}" in response:
+        json_match = re.search(r'\{.*\}', response, re.DOTALL)
 
-    # TODO: parse the user preference json
-    user_pref={
-    'topic': 'i would like to learn async in python',
-    'preference': 'The user has an intermediate to advanced level of experience, has developed AI algorithms, but has little knowledge about web development, wants to use async in projects, specifically with an AI agent that uses API services and requires web requests, and wants to understand both the theoretical concepts and practical applications.'
-    }
-
-    return user_pref
-
+        if json_match:
+            json_str = json_match.group(0)
+            json_str = json_str.replace("'", '"')
+            try:
+                data = json.loads(json_str)
+                return data
+            except json.JSONDecodeError as e:
+                print(f"JSON decode error: {e}")
+        else:
+            print("No json data found")
+            return None
 
 def main():
     st.markdown("""

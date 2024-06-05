@@ -4,9 +4,10 @@ Please only list the urls in separate lines.
 The topic of interest is {topic}.
 """
 
-GEN_WRITERS_PERSPECTIVE = """You need to select a group of experts who will work together to prepare content on the topic for targeted audience. The topic is '{topic}'. \n
-Your choice of experts should reflect and focus on the reader's preference, but also be the self-contained on the content. The reader's perference is '{preference}'. \n
-Each of them represents a different perspective and role related to this topic. For each expert, add description of what they will focus on.
+GEN_WRITERS_PERSPECTIVE = """You need to select a group of experts who will work together to write learning content on the topic for targeted audience. 
+Your choice of experts should reflect and focus on the reader's preference, but should also ensure to write the content self-contained. Each of them represents a different perspective and role related to this topic. For each expert, add sepcific description of what they will focus on, do NOT make up names for them.
+The topic is '{topic}'. \n And the reader's perference is '{preference}'. 
+
 Give your answer in the following format: 1. short summary of editor 1: description\n2. short summary of editor 2: description\n...
 """
 
@@ -131,7 +132,11 @@ more than 10 questions. Remember you goal is to understand your reader very well
 You can NOT throw many questions to reader all at once, gather the information ONE by ONE.
 
 If you think you have found out the answers of the topic and the reader's preference, say "Thanks !" to end the conversation.
-AND output a json object following below format:
+
+And at last, you should summarize your understanding of the user. Do NOT literally take each word from the user's literal request, 
+but rather think STEP-by-STEP what the user's underlying preference is. 
+
+You can write down your step-by-step thinking, but the final output is a json object following below format:
 ```json
 {
     'topic': the topic reader would like to learn,
