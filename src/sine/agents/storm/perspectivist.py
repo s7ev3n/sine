@@ -48,7 +48,7 @@ class PerspectiveGenerator:
 
         return examples
 
-    def gen(self, topic, max_perspective=5):
+    def gen(self, topic, preference, max_perspective=5):
         # find related topics (wiki pages), return urls are wiki links
         urls = self.gen_wiki_url(topic)
 
@@ -58,17 +58,17 @@ class PerspectiveGenerator:
 
         # generate perspectives
         perspectives = [DEFAULT_WRITER_PERSPECTIVE]
-        perspectives.extend(self.gen_perspectives(topic, info)[:max_perspective])
+        perspectives.extend(self.gen_perspectives(topic, preference)[:max_perspective])
 
         logger.info(f"Generated {len(perspectives)} perspectives: {perspectives}")
 
         return perspectives
 
-    def gen_perspectives(self, topic, info):
+    def gen_perspectives(self, topic, preference):
         message = [
             dict(role="user", content=self.gen_perspectives_protocol.format(
                 topic=topic,
-                info=info)),
+                preference=preference)),
         ]
 
         try:

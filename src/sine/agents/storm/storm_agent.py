@@ -37,7 +37,7 @@ class STORMStatus(str, Enum):
 @dataclass
 class STORMConfig:
     topic: str
-    user_profile: str = None
+    user_preference: str = None
     stick_generated_outline: bool = False # STORM default
     writing_sources: str = "search_snippets" # or search_webpage
     expert_mode: str = "T->S->A" # topic -> search -> answer
@@ -90,11 +90,13 @@ class STORM:
         self.outline_writer = OutlineWriter(
             writer_llm=self.outline_llm,
             topic=self.cfg.topic,
+            preference=self.cfg.user_preference,
             draft_outline_protocol=self.cfg.draft_outline_protocol,
             refine_outline_protocol=self.cfg.refine_outline_protocol)
         self.article_writer = ArticleWriter(
             writer_llm=self.article_llm,
             topic=self.cfg.topic,
+            preference=self.cfg.user_preference,
             write_section_protocol=self.cfg.write_section_protocol,
             write_subsection_protocol=self.cfg.write_subsection_protocol,
             write_style_protocol=self.cfg.writer_style)
@@ -112,7 +114,8 @@ class STORM:
     def _init_conversation_roles(self):
         if self.cfg.generate_perspectives:
             perspectives = self.perspectives_generator.gen(topic=self.cfg.topic,
-                                                           max_perspective=self.cfg.max_perspectivist)
+                                                            preference=self.cfg.user_preference,
+                                                            max_perspective=self.cfg.max_perspectivist)
         else:
             perspectives = self.cfg.predefined_perspectives[:self.cfg.max_perspectivist]
         perspectivists = [Perspectivist(self.conversation_llm, perspective, self.cfg.perspectivist_ask_question_protocol) for perspective in perspectives]
